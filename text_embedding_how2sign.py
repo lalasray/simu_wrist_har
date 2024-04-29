@@ -13,7 +13,7 @@ def extract_sentences_from_csv(filename, prefix):
     return sentences
 
 csv_filename = r"C:\Users\lalas\Downloads\how2sign_val.csv"
-prefix = "Represent conversational speech for clustering"
+prefix = "Represent conversational speech senetence for clustering"
 sentences = extract_sentences_from_csv(csv_filename, prefix)
 
 print(len(sentences))
