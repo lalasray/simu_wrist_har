@@ -2,13 +2,13 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-encoder_type = "none"
+imu_encoder_type = "fc"
 
-if encoder_type == "cnn":
+if imu_encoder_type == "cnn":
 
     print("ToDo")
 
-elif encoder_type == "lstm":
+elif imu_encoder_type == "lstm":
 
     class HARModel(nn.Module):
     
