@@ -2,18 +2,20 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-text_encoder_type = "fc"
+text_encoder_type = "attention"
 
 if text_encoder_type == "cnn":
 
-    class CNNEncoder(nn.Module):
-        def __init__(self, input_dim = (768, 10), embedding_dim = 512):
-            super(CNNEncoder, self).__init__()
-            self.conv1 = nn.Conv1d(in_channels=input_dim[0], out_channels=64, kernel_size=3, padding=1)
+    class TextEncoder(nn.Module):
+        def __init__(self, input_dim=(768, 10), embedding_dim=512):
+            super(TextEncoder, self).__init__()
+            self.conv1 = nn.Conv1d(in_channels=input_dim[1], out_channels=64, kernel_size=3, padding=1)
             self.conv2 = nn.Conv1d(in_channels=64, out_channels=128, kernel_size=3, padding=1)
             self.conv3 = nn.Conv1d(in_channels=128, out_channels=256, kernel_size=3, padding=1)
-            self.pool = nn.MaxPool1d(kernel_size=2)
-            self.fc = nn.Linear(256 * (input_dim[1] // 2 // 2), embedding_dim)
+            self.pool = nn.MaxPool1d(kernel_size=3)
+            self.fc1 = nn.Linear(7168, embedding_dim*2)
+            self.fc2 = nn.Linear(embedding_dim*2, embedding_dim)
+
 
         def forward(self, x):
             x = self.conv1(x)
@@ -26,10 +28,14 @@ if text_encoder_type == "cnn":
             x = torch.relu(x)
             x = self.pool(x)
             x = torch.flatten(x, start_dim=1)
-            x = self.fc(x)
+            x = self.fc1(x)
+            x = torch.relu(x)
+            x = self.fc2(x)
+            
             return x
 
-elif text_encoder_type == "attention":
+
+elif text_encoder_type == "attention": #ToFix
 
     class SelfAttention(nn.Module):
         def __init__(self, embed_dim = 512, num_heads = 4):
@@ -52,6 +58,7 @@ elif text_encoder_type == "attention":
             Q = self.query(query)
             K = self.key(key)
             V = self.value(value)
+            print(Q.shape,K.shape,V.shape)
             
             Q = Q.view(batch_size, -1, self.num_heads, self.head_dim).permute(0, 2, 1, 3)
             K = K.view(batch_size, -1, self.num_heads, self.head_dim).permute(0, 2, 1, 3)
@@ -70,15 +77,16 @@ elif text_encoder_type == "attention":
             
             return x
 
-    class CNNWithSelfAttention(nn.Module):
-        def __init__(self, input_dim = (768*10), embedding_dim =512, num_heads = 4):
-            super(CNNWithSelfAttention, self).__init__()
-            self.conv1 = nn.Conv1d(in_channels=input_dim[0], out_channels=64, kernel_size=3, padding=1)
+    class TextEncoder(nn.Module):
+        def __init__(self, input_dim = (768,10), embedding_dim =512, num_heads = 4):
+            super(TextEncoder, self).__init__()
+            self.conv1 = nn.Conv1d(in_channels=input_dim[1], out_channels=64, kernel_size=3, padding=1)
             self.conv2 = nn.Conv1d(in_channels=64, out_channels=128, kernel_size=3, padding=1)
             self.conv3 = nn.Conv1d(in_channels=128, out_channels=256, kernel_size=3, padding=1)
-            self.pool = nn.MaxPool1d(kernel_size=2)
+            self.pool = nn.MaxPool1d(kernel_size=3)
             self.attention = SelfAttention(embed_dim=256, num_heads=num_heads)
-            self.fc = nn.Linear(256 * (input_dim[1] // 2 // 2), embedding_dim)
+            self.fc1 = nn.Linear(7168, embedding_dim*2)
+            self.fc2 = nn.Linear(embedding_dim*2, embedding_dim)
 
         def forward(self, x):
             x = self.conv1(x)
@@ -92,7 +100,10 @@ elif text_encoder_type == "attention":
             x = self.pool(x)
             x = self.attention(x, x, x)
             x = torch.flatten(x, start_dim=1)
-            x = self.fc(x)
+            x = self.fc1(x)
+            x = torch.relu(x)
+            x = self.fc2(x)
+            
             return x
 
 else:
@@ -107,4 +118,5 @@ else:
             )
 
         def forward(self, x):
-            return self.encoder(x)
+            batch_size = x.size(0)
+            return self.encoder(x.view(batch_size, -1))

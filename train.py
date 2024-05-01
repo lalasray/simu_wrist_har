@@ -24,16 +24,20 @@ pose_data = torch.randn(100,30,1024,25).to(device)
 dataset = TensorDataset(text_data, imu_data, video_data, pose_data)
 data_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
-#for batch in data_loader:
-    #text_batch, imu_batch, video_batch, pose_batch = batch
+text_encoder = TextEncoder(embedding_dim=embedding_dim).to(device)
+
+for batch in data_loader:
+    text_batch, imu_batch, video_batch, pose_batch = batch
     #print("Text Data (first element):", text_batch[0].shape)
+    output = text_encoder(text_batch)
+    print(output.shape)
+
     #print("IMU Data (first element):", imu_batch[0].shape)
     #print("Video Data (first element):", video_batch[0].shape)
     #print("Pose Data (first element):", pose_batch[0].shape)
     #break
 
 # Example usage
-text_encoder = TextEncoder(embedding_dim=embedding_dim).to(device)
 #imu_encoder = ImuEncoder(embedding_dim).to(device)
 #video_encoder = VideoEncoder(embedding_dim).to(device)
 #pose_encoder = PoseEncoder(embedding_dim).to(device)
