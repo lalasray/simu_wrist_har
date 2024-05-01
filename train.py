@@ -14,7 +14,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # Generate some random data for demonstration
 num_samples = 1000
-text_input_dim = 768
+text_input_dim = 10*768
 imu_input_dim = 360
 #imu_input_dim = 30*12
 video_input_dim = 30*12*16
