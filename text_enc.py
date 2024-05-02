@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-text_encoder_type = "attention"
+text_encoder_type = "cnn"
 
 if text_encoder_type == "cnn":
 

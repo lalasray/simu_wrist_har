@@ -2,11 +2,36 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-imu_encoder_type = "fc"
+imu_encoder_type = "cnn"
 
 if imu_encoder_type == "cnn":
 
-    print("ToDo")
+    class ImuEncoder(nn.Module):
+        def __init__(self, input_dim=(12, 60), embedding_dim=512):
+            super(ImuEncoder, self).__init__()
+            self.conv1 = nn.Conv1d(in_channels=input_dim[0], out_channels=32, kernel_size=3, padding=1)
+            self.conv2 = nn.Conv1d(in_channels=32, out_channels=128, kernel_size=3, padding=1)
+            self.conv3 = nn.Conv1d(in_channels=128, out_channels=256, kernel_size=3, padding=1)
+            self.pool = nn.MaxPool1d(kernel_size=3)
+            self.fc1 = nn.Linear(256 * (input_dim[1] // 27), embedding_dim)  # Calculate the output size dynamically
+            self.fc2 = nn.Linear(embedding_dim, embedding_dim)
+
+        def forward(self, x):
+            x = self.conv1(x)
+            x = torch.relu(x)
+            x = self.pool(x)
+            x = self.conv2(x)
+            x = torch.relu(x)
+            x = self.pool(x)
+            x = self.conv3(x)
+            x = torch.relu(x)
+            x = self.pool(x)
+            x = torch.flatten(x, start_dim=1)
+            x = self.fc1(x)
+            x = torch.relu(x)
+            x = self.fc2(x)
+            
+            return x
 
 elif imu_encoder_type == "lstm":
 
@@ -70,14 +95,16 @@ elif imu_encoder_type == "lstm":
             return hidden
 
 else:       
+
     class ImuEncoder(nn.Module):
-        def __init__(self, input_dim, embedding_dim):
+        def __init__(self, input_dim= 60*12, embedding_dim = 512):
             super(ImuEncoder, self).__init__()
             self.encoder = nn.Sequential(
-                nn.Linear(input_dim, embedding_dim),
+                nn.Linear(input_dim, embedding_dim*2),
                 nn.ReLU(),
-                nn.Linear(embedding_dim, embedding_dim)
+                nn.Linear(embedding_dim*2, embedding_dim)
             )
 
         def forward(self, x):
-            return self.encoder(x)
+            batch_size = x.size(0)
+            return self.encoder(x.view(batch_size, -1))
