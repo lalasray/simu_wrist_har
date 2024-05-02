@@ -25,7 +25,8 @@ dataset = TensorDataset(text_data, imu_data, video_data, pose_data)
 data_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
 #text_encoder = TextEncoder(embedding_dim=embedding_dim).to(device)
-imu_encoder = ImuEncoder(embedding_dim = embedding_dim).to(device)
+#imu_encoder = ImuEncoder(embedding_dim = embedding_dim).to(device)
+video_encoder = VideoEncoder(embedding_dim = embedding_dim).to(device)
 
 for batch in data_loader:
     text_batch, imu_batch, video_batch, pose_batch = batch
@@ -34,14 +35,16 @@ for batch in data_loader:
     #print(output.shape)
 
     #print("IMU Data (first element):", imu_batch.shape)
-    output = imu_encoder(imu_batch)
-    print(output.shape)
+    #output = imu_encoder(imu_batch)
+    #print(output.shape)
 
     #print("Video Data (first element):", video_batch[0].shape)
+    output = video_encoder(video_batch)
+    print(output.shape)
+
     #print("Pose Data (first element):", pose_batch[0].shape)
     #break
 
-#video_encoder = VideoEncoder(embedding_dim).to(device)
 #pose_encoder = PoseEncoder(embedding_dim).to(device)
 
 #model = MultiModalModel(text_encoder, imu_encoder, video_encoder, pose_encoder).to(device)
