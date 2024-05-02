@@ -13,7 +13,7 @@ from model import TriModalModel,QuadModalModel
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 batch_size = 32
 embedding_dim = 512
-num_epochs = 3
+num_epochs = 30
 
 # to test with random data
 text_data = torch.randn(100,10,768).to(device)
