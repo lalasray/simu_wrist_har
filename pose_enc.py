@@ -8,7 +8,40 @@ if pose_type == "pose":
 
     if pose_encoder_type == "spatiotemporal":
 
-        print("ToDo")
+        class PoseEncoder(nn.Module):
+            def __init__(self, input_dim=(30, 156), embedding_dim=512, num_heads=8, num_layers=6):
+                super(PoseEncoder, self).__init__()
+                self.embedding_dim = embedding_dim
+                self.pos_encoding = PositionalEncoding(embedding_dim, input_dim[1])
+                self.self_attention = nn.MultiheadAttention(embedding_dim, num_heads, dropout=0.1)
+                self.layer_norm = nn.LayerNorm(embedding_dim)
+                
+            def forward(self, x):
+                x = self.pos_encoding(x)
+                x = x.permute(1, 0, 2)
+                attn_output, _ = self.self_attention(x, x, x)
+                attn_output = attn_output.permute(1, 0, 2) 
+                attn_output = self.layer_norm(attn_output)
+                context = torch.mean(attn_output, dim=1)
+                
+                return context
+
+        class PositionalEncoding(nn.Module):
+            def __init__(self, d_model, max_len=1000):
+                super(PositionalEncoding, self).__init__()
+                self.dropout = nn.Dropout(p=0.1)
+                
+                position = torch.arange(0, max_len).unsqueeze(1)
+                div_term = torch.exp(torch.arange(0, d_model, 2) * (-torch.log(torch.tensor(10000.0)) / d_model))
+                pe = torch.zeros(max_len, d_model)
+                pe[:, 0::2] = torch.sin(position * div_term)
+                pe[:, 1::2] = torch.cos(position * div_term)
+                pe = pe.unsqueeze(0).transpose(0, 1)
+                self.register_buffer('pe', pe)
+
+            def forward(self, x):
+                x = x + self.pe[:x.size(0), :]
+                return self.dropout(x)
 
     elif pose_encoder_type == "cnn":
 
