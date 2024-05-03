@@ -6,4 +6,14 @@
 
 
 
- 
+Put dataset in  ./data/how2sign/val/imu_processed
+                ./data/how2sign/val/text_processed
+                ./data/how2sign/val/pose_processed
+
+                ./data/how2sign/train/imu_processed
+                ./data/how2sign/train/text_processed
+                ./data/how2sign/train/pose_processed
+
+                ./data/how2sign/test/imu_processed
+                ./data/how2sign/test/text_processed
+                ./data/how2sign/test/pose_processed
