@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-imu_encoder_type = "lstm"
+imu_encoder_type = "cnn"
 
 if imu_encoder_type == "cnn":
 
