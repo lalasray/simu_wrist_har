@@ -38,13 +38,14 @@ model = TriModalModel(text_encoder, imu_encoder, pose_encoder).to(device)
 criterion = InfonceLoss()
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 
-# Training loop
 for epoch in range(num_epochs):
     total_loss = 0.0
-    model.train()  # Set the model to training mode
+    model.train() 
     for pose, imu, text in train_loader:
         optimizer.zero_grad()
-        text_output, imu_output, pose_output = model(text, imu.permute(0, 2, 1), pose)
+        imu = imu.permute(0, 2, 1)
+        imu = imu.unsqueeze(3) # only for lstm
+        text_output, imu_output, pose_output = model(text, imu, pose)
         loss = criterion(text_output, imu_output) + criterion(text_output, pose_output) + criterion(imu_output, pose_output)
         loss.backward()
         optimizer.step()
@@ -52,12 +53,13 @@ for epoch in range(num_epochs):
     total_loss /= len(train_loader)
     print(f"Epoch {epoch+1}, Training Loss: {total_loss}")
 
-    # Validation loop
-    model.eval()  # Set the model to evaluation mode
+    model.eval()  
     val_loss = 0.0
     with torch.no_grad():
         for pose, imu, text in val_loader:
-            text_output, imu_output, pose_output = model(text, imu.permute(0, 2, 1), pose)
+            imu = imu.permute(0, 2, 1)
+            imu = imu.unsqueeze(3) # only for lstm
+            text_output, imu_output, pose_output = model(text, imu, pose)
             loss = criterion(text_output, imu_output) + criterion(text_output, pose_output) + criterion(imu_output, pose_output)
             val_loss += loss.item()
     val_loss /= len(val_loader)
@@ -71,7 +73,9 @@ for epoch in range(num_epochs):
     #print(output.shape)
 
     #print("IMU Data (first element):", imu[0].shape)
-    #output = imu_encoder(imu.permute(0, 2, 1))
+    #imu = imu.permute(0, 2, 1)
+    #imu = imu.unsqueeze(3) # only for lstm
+    #output = imu_encoder(imu)
     #print(output.shape)
 
     #print("Pose Data (first element):", pose[0].shape)
