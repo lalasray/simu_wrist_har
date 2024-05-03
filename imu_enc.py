@@ -104,10 +104,10 @@ else:
             return self.encoder(x.view(batch_size, -1))
         
 
-batch_size = 16
-input_tensor = torch.randn(batch_size, 12, 60)
-model = ImuEncoder(embedding_dim = 1024)
+#batch_size = 16
+#input_tensor = torch.randn(batch_size, 12, 60)
+#model = ImuEncoder(embedding_dim = 1024)
 #input_tensor = input_tensor.unsqueeze(3) # only for lstm
-print("input shape:", input_tensor.shape)
-output = model(input_tensor)
-print("Output shape:", output.shape)
+#print("input shape:", input_tensor.shape)
+#output = model(input_tensor)
+#print("Output shape:", output.shape)
