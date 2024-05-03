@@ -4,7 +4,7 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 from torch.nn.utils.rnn import pad_sequence
 
-class CustomDataset(Dataset):
+class TriDataset(Dataset):
     def __init__(self, pose_files, imu_files, text_files, pose_window_size, pose_stride, imu_window_size, imu_stride):
         self.pose_files = pose_files
         self.imu_files = imu_files
@@ -64,7 +64,7 @@ imu_window_size = 60
 imu_stride = 30
 
 # Create dataset instance
-dataset = CustomDataset(pose_files, imu_files, text_files, pose_window_size, pose_stride, imu_window_size, imu_stride)
+dataset = TriDataset(pose_files, imu_files, text_files, pose_window_size, pose_stride, imu_window_size, imu_stride)
 
 # Create data loader
 batch_size = 32

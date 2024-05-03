@@ -7,7 +7,7 @@ from scipy.interpolate import interp1d
 import glob
 
 
-directory = '/home/lala/other/Repos/git/simu_wrist_har/data/how2sign/test/npz'
+directory = '/home/lala/other/Repos/git/simu_wrist_har/data/how2sign/val/npz'
 
 npz_files = glob.glob(os.path.join(directory, '**/*.npz'), recursive=True)
 
