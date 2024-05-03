@@ -6,7 +6,9 @@
 
 
 
-Put dataset in  ./data/how2sign/val/imu_processed
+Put dataset in  
+
+                ./data/how2sign/val/imu_processed
                 ./data/how2sign/val/text_processed
                 ./data/how2sign/val/pose_processed
 
