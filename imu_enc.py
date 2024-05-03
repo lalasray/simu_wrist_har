@@ -16,36 +16,40 @@ if imu_encoder_type == "cnn":
             self.fc1 = nn.Linear(256 * (input_dim[1] // 27), embedding_dim)
             self.fc2 = nn.Linear(embedding_dim*4, embedding_dim*2)
             self.fc3 = nn.Linear(embedding_dim*2, embedding_dim)
-
+            self.dropout = nn.Dropout(p=0.3)  
 
         def forward(self, x):
             slices = [x[:,0:3,:],x[:,3:6,:],x[:,6:9,:],x[:,9:12,:]]
             outputs = []
-    
+        
             for slice in slices:
                 out = self.conv1(slice)
                 out = torch.relu(out)
                 out = self.pool(out)
+                out = self.dropout(out)  
                 out = self.conv2(out)
                 out = torch.relu(out)
                 out = self.pool(out)
+                out = self.dropout(out)  
                 out = self.conv3(out)
                 out = torch.relu(out)
                 out = self.pool(out)
+                out = self.dropout(out)  
                 out = torch.flatten(out, start_dim=1)
                 out = self.fc1(out)
                 outputs.append(out)
             x = torch.cat(outputs, dim=1)
             x = self.fc2(x)
             x = torch.relu(x)
+            x = self.dropout(x) 
             x = self.fc3(x)
-                        
+                            
             return x
 
 elif imu_encoder_type == "lstm":
 
     class ImuEncoder(nn.Module):
-        def __init__(self, in_ch = 12, embedding_dim = 512):
+        def __init__(self, in_ch=12, embedding_dim=512):
             super(ImuEncoder, self).__init__()
             num_conv_layers = 4
             num_conv_filter = 64
@@ -91,18 +95,20 @@ elif imu_encoder_type == "lstm":
 else:       
 
     class ImuEncoder(nn.Module):
-        def __init__(self, input_dim= 60*12, embedding_dim = 512):
+        def __init__(self, input_dim=60*12, embedding_dim=512):
             super(ImuEncoder, self).__init__()
             self.encoder = nn.Sequential(
                 nn.Linear(input_dim, embedding_dim*2),
                 nn.ReLU(),
-                nn.Linear(embedding_dim*2, embedding_dim)
+                nn.Dropout(p=0.3),  
+                nn.Linear(embedding_dim*2, embedding_dim),
+                nn.Dropout(p=0.3) 
             )
 
         def forward(self, x):
             batch_size = x.size(0)
             return self.encoder(x.view(batch_size, -1))
-        
+            
 
 #batch_size = 16
 #input_tensor = torch.randn(batch_size, 12, 60)
