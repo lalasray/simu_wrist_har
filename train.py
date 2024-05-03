@@ -16,7 +16,7 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 batch_size = 256
-embedding_dim = 512
+embedding_dim = 1024
 num_epochs = 100
 #parent = os.path.abspath(sys.argv[0])
 parent = "c:/Users/lalas/Documents/GitHub/simu_wrist_har/"
@@ -39,7 +39,7 @@ pose_encoder = PoseEncoder(embedding_dim = embedding_dim).to(device)
 model = TriModalModel(text_encoder, imu_encoder, pose_encoder).to(device)
 criterion = InfonceLoss()
 optimizer = optim.Adam(model.parameters(), lr=0.001)
-patience = 5
+patience = 10
 best_val_loss = float('inf')
 counter = 0
 scheduler = ReduceLROnPlateau(optimizer, mode='min', patience=2)
