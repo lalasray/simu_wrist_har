@@ -45,7 +45,7 @@ for epoch in range(num_epochs):
     for pose, imu, text in train_loader:
         optimizer.zero_grad()
         imu = imu.permute(0, 2, 1)
-        #imu = imu.unsqueeze(3) # only for lstm
+        imu = imu.unsqueeze(3) # only for lstm
         text_output, imu_output, pose_output = model(text, imu, pose)
         loss = criterion(text_output, imu_output) + criterion(text_output, pose_output) + criterion(imu_output, pose_output)
         loss.backward()
@@ -59,7 +59,7 @@ for epoch in range(num_epochs):
     with torch.no_grad():
         for pose, imu, text in val_loader:
             imu = imu.permute(0, 2, 1)
-            #imu = imu.unsqueeze(3) # only for lstm
+            imu = imu.unsqueeze(3) # only for lstm
             text_output, imu_output, pose_output = model(text, imu, pose)
             loss = criterion(text_output, imu_output) + criterion(text_output, pose_output) + criterion(imu_output, pose_output)
             val_loss += loss.item()
