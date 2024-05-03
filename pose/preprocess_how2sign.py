@@ -7,7 +7,7 @@ from scipy.interpolate import interp1d
 import glob
 
 
-directory = '/home/lala/other/Repos/git/simu_wrist_har/data/how2sign/train/npz'
+directory = '/home/lala/other/Repos/git/simu_wrist_har/data/how2sign/test/npz'
 
 npz_files = glob.glob(os.path.join(directory, '**/*.npz'), recursive=True)
 
@@ -28,7 +28,7 @@ for npz_file in npz_files:
     data_mb = np.concatenate((root, body, lhand, rhand), axis=1)
     #print(data_mb.shape)
 
-    new_indices = np.linspace(0, data_mb.shape[0] - 1, int(data_mb.shape[0])*4)
+    new_indices = np.linspace(0, data_mb.shape[0] - 1, int(data_mb.shape[0])*2)
     interpolated_functions = [interp1d(np.arange(data_mb.shape[0]), data_mb[:, i], kind='cubic') for i in range(data_mb.shape[1])]
     interpolated_columns = [func(new_indices) for func in interpolated_functions]
     interpolated_array = np.column_stack(interpolated_columns)
