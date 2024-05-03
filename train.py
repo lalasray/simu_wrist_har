@@ -42,7 +42,7 @@ optimizer = optim.Adam(model.parameters(), lr=0.001)
 patience = 5
 best_val_loss = float('inf')
 counter = 0
-scheduler = ReduceLROnPlateau(optimizer, mode='min', patience=2, verbose=True)
+scheduler = ReduceLROnPlateau(optimizer, mode='min', patience=2)
 
 for epoch in range(num_epochs):
     total_loss = 0.0
@@ -70,13 +70,12 @@ for epoch in range(num_epochs):
             val_loss += loss.item()
     val_loss /= len(val_loader)
     print(f"Epoch {epoch+1}, Validation Loss: {val_loss}")
-    
     scheduler.step(val_loss)
     
     if val_loss < best_val_loss:
         best_val_loss = val_loss
         counter = 0
-        torch.save(model.state_dict(), 'best_model.pth') 
+        torch.save(model.state_dict(), 'best_model.pth')
     else:
         counter += 1
         if counter >= patience:
