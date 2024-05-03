@@ -2,12 +2,12 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-text_encoder_type = "cnn"
+text_encoder_type = "fc"
 
 if text_encoder_type == "cnn":
 
     class TextEncoder(nn.Module):
-        def __init__(self, input_dim=(768, 10), embedding_dim=512):
+        def __init__(self, input_dim=(768), embedding_dim=512):
             super(TextEncoder, self).__init__()
             self.conv1 = nn.Conv1d(in_channels=input_dim[1], out_channels=64, kernel_size=3, padding=1)
             self.conv2 = nn.Conv1d(in_channels=64, out_channels=128, kernel_size=3, padding=1)
@@ -78,7 +78,7 @@ elif text_encoder_type == "attention": #ToFix
             return x
 
     class TextEncoder(nn.Module):
-        def __init__(self, input_dim = (768,10), embedding_dim =512, num_heads = 4):
+        def __init__(self, input_dim = (768), embedding_dim =512, num_heads = 4):
             super(TextEncoder, self).__init__()
             self.conv1 = nn.Conv1d(in_channels=input_dim[1], out_channels=64, kernel_size=3, padding=1)
             self.conv2 = nn.Conv1d(in_channels=64, out_channels=128, kernel_size=3, padding=1)
@@ -109,7 +109,7 @@ elif text_encoder_type == "attention": #ToFix
 else:
 
     class TextEncoder(nn.Module):
-        def __init__(self, input_dim= 768*10, embedding_dim = 512):
+        def __init__(self, input_dim= 768, embedding_dim = 512):
             super(TextEncoder, self).__init__()
             self.encoder = nn.Sequential(
                 nn.Linear(input_dim, embedding_dim*2),
