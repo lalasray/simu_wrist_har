@@ -57,7 +57,6 @@ for epoch in range(num_epochs):
         optimizer.step()
         total_loss += loss.item()
     total_loss /= len(train_loader)
-    print(f"Epoch {epoch+1}, Training Loss: {total_loss}")
 
     model.eval()  
     val_loss = 0.0
@@ -79,5 +78,5 @@ for epoch in range(num_epochs):
     else:
         counter += 1
         if counter >= patience:
-            print("Validation loss hasn't decreased for", patience, "epochs. Early stopping...")
+            print("Validation loss hasn't decreased for ", patience, " epochs. Early stopping...")
             break 
