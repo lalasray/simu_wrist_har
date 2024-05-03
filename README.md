@@ -6,7 +6,7 @@
 
 
 
-Put dataset in  
+For how2sign put datasets in  
 
                 ./data/how2sign/val/imu_processed
                 ./data/how2sign/val/text_processed
