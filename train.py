@@ -11,15 +11,17 @@ from model import TriModalModel,QuadModalModel
 from dataloader import TriDataset,get_data_files
 import os
 from torch.utils.data import ConcatDataset
+import sys 
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 batch_size = 32
 embedding_dim = 1024
 num_epochs = 300
-
-val_path = '/home/lala/other/Repos/git/simu_wrist_har/data/how2sign/val/tensors/'
-test_path = '/home/lala/other/Repos/git/simu_wrist_har/data/how2sign/test/tensors/'
-train_path = '/home/lala/other/Repos/git/simu_wrist_har/data/how2sign/test/tensors/'
+#parent = os.path.abspath(sys.argv[0])
+parent = "c:/Users/lalas/Documents/GitHub/simu_wrist_har/"
+val_path = parent + '/data/how2sign/val/tensors'
+test_path = parent + '/data/how2sign/test/tensors'
+train_path = parent + '/data/how2sign/val/tensors'
 
 dataset_val = TriDataset(get_data_files(val_path))
 
