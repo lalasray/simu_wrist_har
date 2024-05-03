@@ -14,8 +14,8 @@ from torch.utils.data import ConcatDataset
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 batch_size = 32
-embedding_dim = 512
-num_epochs = 30
+embedding_dim = 1024
+num_epochs = 300
 
 val_path = '/home/lala/other/Repos/git/simu_wrist_har/data/how2sign/val/tensors/'
 test_path = '/home/lala/other/Repos/git/simu_wrist_har/data/how2sign/test/tensors/'
