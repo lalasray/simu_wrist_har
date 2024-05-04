@@ -53,11 +53,11 @@ elif imu_encoder_type == "res":
     class ImuEncoder(nn.Module):
         def __init__(self, input_dim=(3, 60), embedding_dim=512):
             super(ImuEncoder, self).__init__()
-            self.conv1 = nn.Conv1d(in_channels=input_dim[0], out_channels=32, kernel_size=3, padding=1)
-            self.conv2 = nn.Conv1d(in_channels=32, out_channels=128, kernel_size=3, padding=1)
-            self.conv3 = nn.Conv1d(in_channels=128, out_channels=256, kernel_size=3, padding=1)
+            self.conv1 = nn.Conv1d(in_channels=input_dim[0], out_channels=9, kernel_size=3, padding=1)
+            self.conv2 = nn.Conv1d(in_channels=9, out_channels=30, kernel_size=3, padding=1)
+            self.conv3 = nn.Conv1d(in_channels=30, out_channels=90, kernel_size=3, padding=1)
             self.pool = nn.MaxPool1d(kernel_size=3)
-            self.fc1 = nn.Linear(256 * (input_dim[1] // 27), embedding_dim)
+            self.fc1 = nn.Linear(input_dim[0]*input_dim[1], embedding_dim)
             self.fc2 = nn.Linear(embedding_dim*4, embedding_dim*2)
             self.fc3 = nn.Linear(embedding_dim*2, embedding_dim)
             self.dropout = nn.Dropout(p=0.3)  
@@ -72,21 +72,21 @@ elif imu_encoder_type == "res":
                 out = self.conv1(slice)
                 out = torch.relu(out)
                 out = self.pool(out)
-                out = self.dropout(out)  
-                out = out + residual
+                out = self.dropout(out)
+                out = out + residual.view(out.shape[0], out.shape[1], -1)
                 residual = out
                 out = self.conv2(out)
                 out = torch.relu(out)
                 out = self.pool(out)
                 out = self.dropout(out)  
-                out = out + residual
+                out = out + residual.view(out.shape[0], out.shape[1], -1)
                 residual = out
                 out = self.conv3(out)
                 out = torch.relu(out)
                 out = self.pool(out)
                 out = self.dropout(out)  
-                out = out + residual
-                out = torch.flatten(out, start_dim=1)
+                out = out + residual.view(out.shape[0], out.shape[1], -1)
+                out = torch.flatten(out, start_dim=1) 
                 out = self.fc1(out)
                 outputs.append(out)
 
