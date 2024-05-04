@@ -1,8 +1,9 @@
 import torch.nn as nn
 import torch
+import config
 
-pose_type = "pose"
-pose_encoder_type = "res"
+pose_type = config.pose_type
+pose_encoder_type = config.pose_encoder_type
 
 if pose_type == "pose":
 

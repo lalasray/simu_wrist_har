@@ -7,9 +7,10 @@ from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt
 from dataloader import TriDataset, get_data_files
 from torch.utils.data import ConcatDataset, DataLoader
+import config
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-embedding_dim = 1024
+embedding_dim = config.embedding_dim
 
 model = TriModalModel(TextEncoder(embedding_dim=embedding_dim).to(device),
                       ImuEncoder(embedding_dim=embedding_dim).to(device),
@@ -23,7 +24,7 @@ val_path = parent + '/data/how2sign/val/tensors'
 
 dataset_val = TriDataset(get_data_files(val_path))
 
-loader = DataLoader(dataset_val, batch_size=256, shuffle=False)
+loader = DataLoader(dataset_val, batch_size=config.batch_size, shuffle=False)
 
 text_embeddings = []
 imu_embeddings = []

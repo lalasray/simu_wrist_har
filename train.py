@@ -15,13 +15,14 @@ from torch.utils.data import ConcatDataset
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from pytorch_lightning import Trainer
 from pytorch_lightning.loggers import TensorBoardLogger
+import config
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-batch_size = 32
-embedding_dim = 32
-num_epochs = 100
-parent = "c:/Users/lalas/Documents/GitHub/simu_wrist_har/"
-#parent = "/home/lala/other/Repos/git/simu_wrist_har/"
+batch_size = config.batch_size
+embedding_dim = config.embedding_dim
+num_epochs = config.num_epochs
+
+parent = config.parent
 val_path = os.path.join(parent, 'data/how2sign/val/tensors')
 test_path = os.path.join(parent, 'data/how2sign/test/tensors')
 train_path = os.path.join(parent, 'data/how2sign/train/tensors')
@@ -41,7 +42,7 @@ pose_encoder = PoseEncoder(embedding_dim=embedding_dim).to(device)
 model = TriModalModel(text_encoder, imu_encoder, pose_encoder).to(device)
 criterion = InfonceLoss()
 optimizer = optim.Adam(model.parameters(), lr=0.001)
-patience = 10
+patience = config.patience
 best_val_loss = float('inf')
 counter = 0
 scheduler = ReduceLROnPlateau(optimizer, mode='min', patience=5)

@@ -8,17 +8,19 @@ from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt
 from dataloader import TriDataset, get_data_files
 from torch.utils.data import ConcatDataset, DataLoader
+import config
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-embedding_dim = 1024
-num_classes = 10 
 
-parent = "/home/lala/other/Repos/git/simu_wrist_har/"
+embedding_dim = config.embedding_dim
+num_classes = config.classes 
+
+parent = config.parent
 val_path = parent + '/data/how2sign/val/tensors'
 
 dataset_val = TriDataset_class(get_data_files(val_path)) #dataloader with classes
 
-loader = DataLoader(dataset_val, batch_size=256, shuffle=False)
+loader = DataLoader(dataset_val, batch_size=config.batch_size_class, shuffle=False)
 
 class ClassificationHead(nn.Module):
     def __init__(self, input_dim, num_classes):
@@ -42,7 +44,7 @@ classification_head = ClassificationHead(input_dim=embedding_dim * 3, num_classe
 criterion = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(classification_head.parameters(), lr=0.001) 
 
-num_epochs = 10 
+num_epochs = config.num_epochs_class 
 
 for epoch in range(num_epochs):
     model.train()

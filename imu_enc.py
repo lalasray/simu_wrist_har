@@ -1,8 +1,9 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import config
 
-imu_encoder_type = "res"
+imu_encoder_type = config.imu_encoder_type
 
 if imu_encoder_type == "cnn":
 

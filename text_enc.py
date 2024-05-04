@@ -1,8 +1,8 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
-text_encoder_type = "res"
+import config
+text_encoder_type = config.text_encoder_type
 
 if text_encoder_type == "cnn":
 
