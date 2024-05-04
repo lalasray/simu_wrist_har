@@ -71,7 +71,6 @@ elif text_encoder_type == "res":
             x = self.dropout(x)  
             x = x + residual.view(x.shape[0], x.shape[1], -1)
             x = torch.flatten(x, start_dim=1)
-            print(x.shape)
             x = self.fc1(x)
             x = torch.relu(x)
             x = self.dropout(x) 
