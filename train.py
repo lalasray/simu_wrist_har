@@ -19,7 +19,7 @@ from pytorch_lightning.loggers import TensorBoardLogger
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 batch_size = 32
 embedding_dim = 1024
-num_epochs = 300
+num_epochs = 100
 parent = "c:/Users/lalas/Documents/GitHub/simu_wrist_har/"
 val_path = os.path.join(parent, 'data/how2sign/val/tensors')
 test_path = os.path.join(parent, 'data/how2sign/test/tensors')
@@ -43,13 +43,13 @@ optimizer = optim.Adam(model.parameters(), lr=0.001)
 patience = 50
 best_val_loss = float('inf')
 counter = 0
-scheduler = ReduceLROnPlateau(optimizer, mode='min', patience=2)
+scheduler = ReduceLROnPlateau(optimizer, mode='min', patience=5)
 
 # Specify the directory for local logging
 local_log_dir = "local_logs"
 
 # Initialize the logger for local logging
-logger = TensorBoardLogger(local_log_dir, name="multimodal_experiment")
+logger = TensorBoardLogger(local_log_dir, name="multimodal_experiment_cnn")
 
 # Log hyperparameters
 hyperparameters = {"embedding_dim": embedding_dim, "batch_size": batch_size}
