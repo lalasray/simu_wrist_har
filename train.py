@@ -20,17 +20,18 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 batch_size = 32
 embedding_dim = 1024
 num_epochs = 100
-parent = "c:/Users/lalas/Documents/GitHub/simu_wrist_har/"
+#parent = "c:/Users/lalas/Documents/GitHub/simu_wrist_har/"
+parent = "/home/lala/other/Repos/git/simu_wrist_har/"
 val_path = os.path.join(parent, 'data/how2sign/val/tensors')
 test_path = os.path.join(parent, 'data/how2sign/test/tensors')
-train_path = os.path.join(parent, 'data/how2sign/val/tensors')
+train_path = os.path.join(parent, 'data/how2sign/train/tensors')
 
 dataset_val = TriDataset(get_data_files(val_path))
 dataset_train = TriDataset(get_data_files(train_path))
 dataset_test = TriDataset(get_data_files(test_path))
 combined_dataset = ConcatDataset([dataset_train, dataset_test])
 
-train_loader = DataLoader(dataset_train, batch_size=batch_size, shuffle=True)
+train_loader = DataLoader(combined_dataset, batch_size=batch_size, shuffle=True)
 val_loader = DataLoader(dataset_val, batch_size=batch_size, shuffle=True)
 
 text_encoder = TextEncoder(embedding_dim=embedding_dim).to(device)
@@ -92,4 +93,4 @@ for epoch in range(num_epochs):
     logger.log_metrics({"train_loss": total_loss, "val_loss": val_loss}, step=epoch)
 
 # Close the logger
-logger.close()
+#logger.close()
