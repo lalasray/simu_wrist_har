@@ -13,6 +13,7 @@ from model import TriModalModel,QuadModalModel
 from dataloader import TriDataset,get_data_files
 from torch.utils.data import ConcatDataset
 from torch.optim.lr_scheduler import ReduceLROnPlateau
+from torch.utils.tensorboard import SummaryWriter
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 batch_size = 32
@@ -43,6 +44,12 @@ patience = 50
 best_val_loss = float('inf')
 counter = 0
 scheduler = ReduceLROnPlateau(optimizer, mode='min', patience=2)
+
+log_dir = f'./logs_embedding_dim_{embedding_dim}_batch_size_{batch_size}'
+if not os.path.exists(log_dir):
+    os.makedirs(log_dir)
+
+writer = SummaryWriter(log_dir=log_dir)
 
 for epoch in range(num_epochs):
     total_loss = 0.0
@@ -76,3 +83,4 @@ for epoch in range(num_epochs):
         if counter >= patience:
             print("Validation loss hasn't decreased for ", patience, " epochs. Early stopping...")
             break 
+writer.close()
