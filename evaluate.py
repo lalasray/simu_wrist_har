@@ -66,3 +66,44 @@ plt.scatter(text_tsne[:, 0], text_tsne[:, 1], s=1)
 plt.scatter(imu_tsne[:, 0], imu_tsne[:, 1], s=1)
 
 plt.show()
+
+raw_text_embeddings = []
+raw_imu_embeddings = []
+raw_pose_embeddings = []
+
+for pose, imu, text in loader:
+    raw_text_embeddings.append(text)
+    raw_imu_embeddings.append(imu)
+    raw_pose_embeddings.append(pose)
+
+raw_text_embeddings = torch.cat(raw_text_embeddings, dim=0)
+raw_imu_embeddings = torch.cat(raw_imu_embeddings, dim=0)
+raw_pose_embeddings = torch.cat(raw_pose_embeddings, dim=0)
+
+tsne = TSNE(n_components=2, random_state=42)
+
+text_tsne = tsne.fit_transform(raw_text_embeddings.cpu())
+imu_tsne = tsne.fit_transform(imu_embeddings.cpu())
+pose_tsne = tsne.fit_transform(raw_pose_embeddings.cpu())
+
+plt.figure(figsize=(15, 5))
+
+plt.subplot(1, 4, 1)
+plt.title('Text Modality')
+plt.scatter(text_tsne[:, 0], text_tsne[:, 1], s=5)
+
+plt.subplot(1, 4, 2)
+plt.title('IMU Modality')
+plt.scatter(imu_tsne[:, 0], imu_tsne[:, 1], s=5)
+
+plt.subplot(1, 4, 3)
+plt.title('Pose Modality')
+plt.scatter(pose_tsne[:, 0], pose_tsne[:, 1], s=5)
+
+plt.subplot(1, 4, 4)
+plt.title('All Modality')
+plt.scatter(pose_tsne[:, 0], pose_tsne[:, 1], s=1)
+plt.scatter(text_tsne[:, 0], text_tsne[:, 1], s=1)
+plt.scatter(imu_tsne[:, 0], imu_tsne[:, 1], s=1)
+
+plt.show()
