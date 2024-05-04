@@ -66,7 +66,7 @@ for epoch in range(num_epochs):
         optimizer.step()
         total_loss += loss.item()
     total_loss /= len(train_loader)
-
+    
     model.eval()  
     val_loss = 0.0
     with torch.no_grad():
@@ -75,7 +75,7 @@ for epoch in range(num_epochs):
             loss = criterion(text_output, imu_output) + criterion(text_output, pose_output) + criterion(imu_output, pose_output)
             val_loss += loss.item()
     val_loss /= len(val_loader)
-    print(f"Epoch {epoch+1}, Validation Loss: {val_loss}")
+    print(f"Epoch {epoch+1}, Validation Loss: {val_loss}, Train Loss: {total_loss}")
     scheduler.step(val_loss)
     
     if val_loss < best_val_loss:
