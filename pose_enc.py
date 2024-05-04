@@ -2,7 +2,7 @@ import torch.nn as nn
 import torch
 
 pose_type = "pose"
-pose_encoder_type = "spatiotemporal"
+pose_encoder_type = "res"
 
 if pose_type == "pose":
 
@@ -92,6 +92,64 @@ if pose_type == "pose":
                     x = self.fc1(x)
                     outputs.append(x)
             
+                x = torch.cat(outputs, dim=1)
+                x = self.fc2(x)
+                x = torch.relu(x)
+                x = self.dropout(x) 
+                x = self.fc3(x)
+                        
+                return x
+            
+    elif pose_encoder_type == "res":
+
+        class PoseEncoder(nn.Module):
+            def __init__(self, input_dim=(30,156), embedding_dim=512):
+                super(PoseEncoder, self).__init__()
+                self.conv1_1 = nn.Conv1d(in_channels=3, out_channels=32, kernel_size=3, padding=1)
+                self.conv1_2 = nn.Conv1d(in_channels=63, out_channels=32, kernel_size=3, padding=1)
+                self.conv1_3 = nn.Conv1d(in_channels=45, out_channels=32, kernel_size=3, padding=1)
+                self.conv2 = nn.Conv1d(in_channels=32, out_channels=128, kernel_size=3, padding=1)
+                self.conv3 = nn.Conv1d(in_channels=128, out_channels=256, kernel_size=3, padding=1)
+                self.pool = nn.MaxPool1d(kernel_size=3)
+                self.fc1 = nn.Linear(256 , embedding_dim) 
+                self.fc2 = nn.Linear(embedding_dim*4, embedding_dim*2)
+                self.fc3 = nn.Linear(embedding_dim*2, embedding_dim)
+                
+                self.dropout = nn.Dropout(p=0.3)  
+
+            def forward(self, x):
+                x = x.view(-1, x.size(2), x.size(1))
+                slices = [x[:,0:3,:], x[:,3:66,:], x[:,66:111,:], x[:,111:156,:]]
+                outputs = []
+
+                for slice in slices:
+                    residual = slice.clone()
+                    if slice.shape[1] == 3:
+                        out = self.conv1_1(slice)
+                    elif slice.shape[1] == 63:
+                        out = self.conv1_2(slice)
+                    else:
+                        out = self.conv1_3(slice)
+                    out = torch.relu(out)
+                    out = self.pool(out)
+                    out = self.dropout(out)  
+                    out = out + residual
+                    residual = out
+                    out = self.conv2(out)
+                    out = torch.relu(out)
+                    out = self.pool(out)
+                    out = self.dropout(out)  
+                    out = out + residual
+                    residual = out
+                    out = self.conv3(out)
+                    out = torch.relu(out)
+                    out = self.pool(out)
+                    out = self.dropout(out)  
+                    out = out + residual
+                    out = torch.flatten(out, start_dim=1)
+                    out = self.fc1(out)
+                    outputs.append(out)
+
                 x = torch.cat(outputs, dim=1)
                 x = self.fc2(x)
                 x = torch.relu(x)

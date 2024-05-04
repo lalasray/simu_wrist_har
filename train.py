@@ -18,16 +18,16 @@ from pytorch_lightning.loggers import TensorBoardLogger
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 batch_size = 32
-embedding_dim = 1024
+embedding_dim = 32
 num_epochs = 100
-#parent = "c:/Users/lalas/Documents/GitHub/simu_wrist_har/"
-parent = "/home/lala/other/Repos/git/simu_wrist_har/"
+parent = "c:/Users/lalas/Documents/GitHub/simu_wrist_har/"
+#parent = "/home/lala/other/Repos/git/simu_wrist_har/"
 val_path = os.path.join(parent, 'data/how2sign/val/tensors')
 test_path = os.path.join(parent, 'data/how2sign/test/tensors')
 train_path = os.path.join(parent, 'data/how2sign/train/tensors')
 
 dataset_val = TriDataset(get_data_files(val_path))
-dataset_train = TriDataset(get_data_files(train_path))
+dataset_train = TriDataset(get_data_files(val_path))
 dataset_test = TriDataset(get_data_files(test_path))
 combined_dataset = ConcatDataset([dataset_train, dataset_test])
 
@@ -41,18 +41,13 @@ pose_encoder = PoseEncoder(embedding_dim=embedding_dim).to(device)
 model = TriModalModel(text_encoder, imu_encoder, pose_encoder).to(device)
 criterion = InfonceLoss()
 optimizer = optim.Adam(model.parameters(), lr=0.001)
-patience = 50
+patience = 10
 best_val_loss = float('inf')
 counter = 0
 scheduler = ReduceLROnPlateau(optimizer, mode='min', patience=5)
 
-# Specify the directory for local logging
 local_log_dir = "local_logs"
-
-# Initialize the logger for local logging
 logger = TensorBoardLogger(local_log_dir, name="multimodal_experiment_cnn")
-
-# Log hyperparameters
 hyperparameters = {"embedding_dim": embedding_dim, "batch_size": batch_size}
 logger.log_hyperparams(hyperparameters)
 

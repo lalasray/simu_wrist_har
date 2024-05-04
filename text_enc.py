@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-text_encoder_type = "cnn"
+text_encoder_type = "res"
 
 if text_encoder_type == "cnn":
 
@@ -38,6 +38,47 @@ if text_encoder_type == "cnn":
         
         return x
 
+elif text_encoder_type == "res":
+
+    class TextEncoder(nn.Module):
+        def __init__(self, input_dim=768, embedding_dim=512):
+            super(TextEncoder, self).__init__()
+            self.conv1 = nn.Conv1d(in_channels=input_dim, out_channels=64, kernel_size=3, padding=1)
+            self.conv2 = nn.Conv1d(in_channels=64, out_channels=128, kernel_size=3, padding=3)
+            self.conv3 = nn.Conv1d(in_channels=128, out_channels=256, kernel_size=3, padding=2)
+            self.pool = nn.MaxPool1d(kernel_size=3, padding=1)
+            self.fc1 = nn.Linear(input_dim, embedding_dim * 2) 
+            self.fc2 = nn.Linear(embedding_dim * 2, embedding_dim)
+            self.dropout = nn.Dropout(p=0.3)  
+
+        def forward(self, x):
+            residual = x
+            x = self.conv1(x.unsqueeze(2))
+            x = torch.relu(x)
+            x = self.pool(x)
+            x = self.dropout(x)  
+            x = x + residual.view(batch_size, x.shape[1], -1)
+            residual = x
+            x = self.conv2(x)
+            x = torch.relu(x)
+            x = self.pool(x)
+            x = self.dropout(x)  
+            x = x + residual.view(batch_size, x.shape[1], -1)
+            residual = x
+            x = self.conv3(x)
+            x = torch.relu(x)
+            x = self.pool(x)
+            x = self.dropout(x)  
+            x = x + residual.view(batch_size, x.shape[1], -1)
+            x = torch.flatten(x, start_dim=1)
+            print(x.shape)
+            x = self.fc1(x)
+            x = torch.relu(x)
+            x = self.dropout(x) 
+            x = self.fc2(x)
+            
+            return x
+
 else:
 
     class TextEncoder(nn.Module):
@@ -57,7 +98,7 @@ else:
 
 #batch_size = 16
 #input_tensor = torch.randn(batch_size, 768)
-#model = TextEncoder(embedding_dim = 1024)
+#model = TextEncoder(embedding_dim = 128)
 #print("input shape:", input_tensor.shape)
 #output = model(input_tensor)
 #print("Output shape:", output.shape)
