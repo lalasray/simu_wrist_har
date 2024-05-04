@@ -85,8 +85,4 @@ for epoch in range(num_epochs):
             print("Validation loss hasn't decreased for ", patience, " epochs. Early stopping...")
             break 
 
-    # Log metrics using the logger
     logger.log_metrics({"train_loss": total_loss, "val_loss": val_loss}, step=epoch)
-
-# Close the logger
-#logger.close()
