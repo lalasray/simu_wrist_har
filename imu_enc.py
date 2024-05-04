@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-imu_encoder_type = "cnn"
+imu_encoder_type = "lstm"
 
 if imu_encoder_type == "cnn":
 
@@ -19,6 +19,8 @@ if imu_encoder_type == "cnn":
             self.dropout = nn.Dropout(p=0.3)  
 
         def forward(self, x):
+
+            x = x.view(-1, x.size(2), x.size(1))
             slices = [x[:,0:3,:],x[:,3:6,:],x[:,6:9,:],x[:,9:12,:]]
             outputs = []
         
@@ -76,6 +78,8 @@ elif imu_encoder_type == "lstm":
 
         def forward(self, x: torch.Tensor) -> torch.Tensor:
             
+            x = x.view(-1, x.size(2), x.size(1))
+            x = x.unsqueeze(3)
             for block in self.conv_blocks:
                 x = block(x)
 
@@ -111,9 +115,8 @@ else:
             
 
 #batch_size = 16
-#input_tensor = torch.randn(batch_size, 12, 60)
+#input_tensor = torch.randn(batch_size, 60, 12)
 #model = ImuEncoder(embedding_dim = 1024)
-#input_tensor = input_tensor.unsqueeze(3) # only for lstm
 #print("input shape:", input_tensor.shape)
 #output = model(input_tensor)
 #print("Output shape:", output.shape)

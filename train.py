@@ -1,3 +1,5 @@
+import os
+import sys
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -9,15 +11,13 @@ from pose_enc import PoseEncoder
 from loss import InfonceLoss
 from model import TriModalModel,QuadModalModel
 from dataloader import TriDataset,get_data_files
-import os
 from torch.utils.data import ConcatDataset
-import sys
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-batch_size = 256
+batch_size = 32
 embedding_dim = 1024
-num_epochs = 100
+num_epochs = 300
 #parent = os.path.abspath(sys.argv[0])
 parent = "c:/Users/lalas/Documents/GitHub/simu_wrist_har/"
 val_path = parent + '/data/how2sign/val/tensors'
@@ -39,7 +39,7 @@ pose_encoder = PoseEncoder(embedding_dim = embedding_dim).to(device)
 model = TriModalModel(text_encoder, imu_encoder, pose_encoder).to(device)
 criterion = InfonceLoss()
 optimizer = optim.Adam(model.parameters(), lr=0.001)
-patience = 10
+patience = 50
 best_val_loss = float('inf')
 counter = 0
 scheduler = ReduceLROnPlateau(optimizer, mode='min', patience=2)
@@ -49,8 +49,6 @@ for epoch in range(num_epochs):
     model.train() 
     for pose, imu, text in train_loader:
         optimizer.zero_grad()
-        imu = imu.permute(0, 2, 1)
-        #imu = imu.unsqueeze(3) # only for lstm
         text_output, imu_output, pose_output = model(text, imu, pose)
         loss = criterion(text_output, imu_output) + criterion(text_output, pose_output) + criterion(imu_output, pose_output)
         loss.backward()
@@ -62,8 +60,6 @@ for epoch in range(num_epochs):
     val_loss = 0.0
     with torch.no_grad():
         for pose, imu, text in val_loader:
-            imu = imu.permute(0, 2, 1)
-            #imu = imu.unsqueeze(3) # only for lstm
             text_output, imu_output, pose_output = model(text, imu, pose)
             loss = criterion(text_output, imu_output) + criterion(text_output, pose_output) + criterion(imu_output, pose_output)
             val_loss += loss.item()

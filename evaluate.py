@@ -9,7 +9,7 @@ from dataloader import TriDataset, get_data_files
 from torch.utils.data import ConcatDataset, DataLoader
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-embedding_dim = 512
+embedding_dim = 1024
 
 model = TriModalModel(TextEncoder(embedding_dim=embedding_dim).to(device),
                       ImuEncoder(embedding_dim=embedding_dim).to(device),
@@ -30,8 +30,6 @@ pose_embeddings = []
 
 with torch.no_grad():
     for pose, imu, text in loader:
-        imu = imu.permute(0, 2, 1)
-        #imu = imu.unsqueeze(3) # only for lstm
         text_embedding, imu_embedding, pose_embedding = model(text, imu, pose)
         text_embeddings.append(text_embedding)
         imu_embeddings.append(imu_embedding)
@@ -49,16 +47,22 @@ pose_tsne = tsne.fit_transform(pose_embeddings.cpu())
 
 plt.figure(figsize=(15, 5))
 
-plt.subplot(1, 3, 1)
+plt.subplot(1, 4, 1)
 plt.title('Text Modality')
 plt.scatter(text_tsne[:, 0], text_tsne[:, 1], s=5)
 
-plt.subplot(1, 3, 2)
+plt.subplot(1, 4, 2)
 plt.title('IMU Modality')
 plt.scatter(imu_tsne[:, 0], imu_tsne[:, 1], s=5)
 
-plt.subplot(1, 3, 3)
+plt.subplot(1, 4, 3)
 plt.title('Pose Modality')
 plt.scatter(pose_tsne[:, 0], pose_tsne[:, 1], s=5)
+
+plt.subplot(1, 4, 4)
+plt.title('All Modality')
+plt.scatter(pose_tsne[:, 0], pose_tsne[:, 1], s=1)
+plt.scatter(text_tsne[:, 0], text_tsne[:, 1], s=1)
+plt.scatter(imu_tsne[:, 0], imu_tsne[:, 1], s=1)
 
 plt.show()
