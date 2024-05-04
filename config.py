@@ -1,7 +1,7 @@
-imu_encoder_type = "res"
-text_encoder_type = "res"
-pose_type = "pose"
-pose_encoder_type = "res"
+imu_encoder_type = "res" #lstm #fc #cnn
+text_encoder_type = "res" #fc #cnn
+pose_type = "pose" #embedding 
+pose_encoder_type = "res" #spatiotemporal #fc #cnn
 
 batch_size = 32
 embedding_dim = 32
