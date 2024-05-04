@@ -1,6 +1,4 @@
 from tensorboard import notebook
 
-batch_size = 32
-embedding_size = 1024
-log_dir = './logs_embedding_dim_'+str(1024)+'_batch_size_'+str(32)
+log_dir = 'C:\Users\lalas\Documents\GitHub\simu_wrist_har\local_logs\multimodal_experiment\version_0\events.out.tfevents.1714786213.port-3128.22968.0'
 notebook.start("--logdir " + log_dir)
