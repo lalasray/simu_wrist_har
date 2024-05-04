@@ -9,21 +9,21 @@ from imu_enc import ImuEncoder
 from video_enc import VideoEncoder
 from pose_enc import PoseEncoder
 from loss import InfonceLoss
-from model import TriModalModel,QuadModalModel
-from dataloader import TriDataset,get_data_files
+from model import TriModalModel, QuadModalModel
+from dataloader import TriDataset, get_data_files
 from torch.utils.data import ConcatDataset
 from torch.optim.lr_scheduler import ReduceLROnPlateau
-from torch.utils.tensorboard import SummaryWriter
+from pytorch_lightning import Trainer
+from pytorch_lightning.loggers import TensorBoardLogger
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 batch_size = 32
 embedding_dim = 1024
 num_epochs = 300
-#parent = os.path.abspath(sys.argv[0])
 parent = "c:/Users/lalas/Documents/GitHub/simu_wrist_har/"
-val_path = parent + '/data/how2sign/val/tensors'
-test_path = parent + '/data/how2sign/test/tensors'
-train_path = parent + '/data/how2sign/val/tensors'
+val_path = os.path.join(parent, 'data/how2sign/val/tensors')
+test_path = os.path.join(parent, 'data/how2sign/test/tensors')
+train_path = os.path.join(parent, 'data/how2sign/val/tensors')
 
 dataset_val = TriDataset(get_data_files(val_path))
 dataset_train = TriDataset(get_data_files(train_path))
@@ -34,8 +34,8 @@ train_loader = DataLoader(dataset_train, batch_size=batch_size, shuffle=True)
 val_loader = DataLoader(dataset_val, batch_size=batch_size, shuffle=True)
 
 text_encoder = TextEncoder(embedding_dim=embedding_dim).to(device)
-imu_encoder = ImuEncoder(embedding_dim = embedding_dim).to(device)
-pose_encoder = PoseEncoder(embedding_dim = embedding_dim).to(device)
+imu_encoder = ImuEncoder(embedding_dim=embedding_dim).to(device)
+pose_encoder = PoseEncoder(embedding_dim=embedding_dim).to(device)
 
 model = TriModalModel(text_encoder, imu_encoder, pose_encoder).to(device)
 criterion = InfonceLoss()
@@ -45,11 +45,15 @@ best_val_loss = float('inf')
 counter = 0
 scheduler = ReduceLROnPlateau(optimizer, mode='min', patience=2)
 
-log_dir = f'./logs_embedding_dim_{embedding_dim}_batch_size_{batch_size}'
-if not os.path.exists(log_dir):
-    os.makedirs(log_dir)
+# Specify the directory for local logging
+local_log_dir = "local_logs"
 
-writer = SummaryWriter(log_dir=log_dir)
+# Initialize the logger for local logging
+logger = TensorBoardLogger(local_log_dir, name="multimodal_experiment")
+
+# Log hyperparameters
+hyperparameters = {"embedding_dim": embedding_dim, "batch_size": batch_size}
+logger.log_hyperparams(hyperparameters)
 
 for epoch in range(num_epochs):
     total_loss = 0.0
@@ -83,4 +87,9 @@ for epoch in range(num_epochs):
         if counter >= patience:
             print("Validation loss hasn't decreased for ", patience, " epochs. Early stopping...")
             break 
-writer.close()
+
+    # Log metrics using the logger
+    logger.log_metrics({"train_loss": total_loss, "val_loss": val_loss}, step=epoch)
+
+# Close the logger
+logger.close()
