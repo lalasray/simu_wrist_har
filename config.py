@@ -10,6 +10,8 @@ embedding_dim = 2048
 num_epochs = 300
 patience = 10
 
+classifer_type = "fc" #fc #cnn #res #lstm #spatiotemporal
+
 classes = 10
 num_epochs_class = 100
 batch_size_class = 32

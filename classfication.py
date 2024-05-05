@@ -4,10 +4,10 @@ from model import TriModalModel
 from text_enc import TextEncoder
 from imu_enc import ImuEncoder
 from pose_enc import PoseEncoder
-from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt
-from dataloader import TriDataset, get_data_files
+from dataloader import TriDataset_class, get_data_files
 from torch.utils.data import ConcatDataset, DataLoader
+from classfication import ClassificationHead
 import config
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -21,15 +21,6 @@ val_path = parent + '/data/how2sign/val/tensors'
 dataset_val = TriDataset_class(get_data_files(val_path)) #dataloader with classes
 
 loader = DataLoader(dataset_val, batch_size=config.batch_size_class, shuffle=False)
-
-class ClassificationHead(nn.Module):
-    def __init__(self, input_dim, num_classes):
-        super(ClassificationHead, self).__init__()
-        self.fc = nn.Linear(input_dim, num_classes)
-
-    def forward(self, x):
-        x = self.fc(x)
-        return x
 
 model = TriModalModel(TextEncoder(embedding_dim=embedding_dim).to(device),
                       ImuEncoder(embedding_dim=embedding_dim).to(device),
