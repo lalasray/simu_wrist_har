@@ -78,6 +78,27 @@ elif text_encoder_type == "res":
             
             return x
 
+elif text_encoder_type == "spatial":
+
+    class TextEncoder(nn.Module):
+        def __init__(self, input_dim=768, embedding_dim=1024, num_heads=8):
+            super(TextEncoder, self).__init__()
+            self.embedding_dim = embedding_dim
+            self.upsample = nn.Linear(input_dim, embedding_dim)
+            self.self_attention = nn.MultiheadAttention(embedding_dim, num_heads, dropout=0.1)
+            self.layer_norm = nn.LayerNorm(embedding_dim)
+                    
+        def forward(self, x):
+            x = x.unsqueeze(0)
+            x = self.upsample(x)
+            x = x.permute(1, 0, 2)
+            attn_output, _ = self.self_attention(x, x, x)
+            attn_output = attn_output.permute(1, 0, 2) 
+            attn_output = self.layer_norm(attn_output)
+            context = torch.mean(attn_output, dim=1)
+            return context
+
+
 else:
 
     class TextEncoder(nn.Module):

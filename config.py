@@ -1,10 +1,10 @@
-imu_encoder_type = "res" #lstm #fc #cnn
-text_encoder_type = "res" #fc #cnn
+imu_encoder_type = "spatiotemporal" #fc #cnn #res #lstm #spatiotemporal
+text_encoder_type = "res" #fc #cnn #res #spatial
 pose_type = "pose" #embedding 
-pose_encoder_type = "res" #spatiotemporal #fc #cnn
+pose_encoder_type = "spatiotemporal"  #fc #cnn #res #spatiotemporal
 
 batch_size = 32
-embedding_dim = 32
+embedding_dim = 2048
 num_epochs = 100
 patience = 10
 
