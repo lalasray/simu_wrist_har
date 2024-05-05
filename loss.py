@@ -65,3 +65,38 @@ class ContrastiveLoss(nn.Module):
         loss = F.cross_entropy(logits, labels)
 
         return loss
+
+class InfonceLossForClustering(nn.Module):
+    def __init__(self, temperature=0.07):
+        super(InfonceLossForClustering, self).__init__()
+        self.temperature = temperature
+
+    def forward(self, q, k, labels):
+        # Calculate cosine similarity
+        sim_matrix = torch.matmul(q, k.t())
+        sim_matrix = sim_matrix / torch.norm(q, dim=-1, keepdim=True)
+        sim_matrix = sim_matrix / torch.norm(k, dim=-1, keepdim=True).t()
+
+        # Calculate logits
+        logits = sim_matrix / self.temperature
+
+        # Positive pairs: diagonal elements
+        diag = torch.diag(logits)
+        # Negative pairs: off-diagonal elements
+        negatives = logits - torch.diag(torch.diagonal(logits))
+
+        # Calculate cross-entropy loss
+        exp_logits = torch.exp(logits - diag.unsqueeze(1))
+        numerator = torch.sum(exp_logits, dim=-1)
+        denominator = exp_logits.sum(dim=-1).unsqueeze(1) + torch.sum(torch.exp(negatives), dim=-1)
+        loss = -torch.log(numerator / denominator)
+
+        # Mask out the losses for samples in different clusters
+        mask = (labels.unsqueeze(1) == labels.unsqueeze(0)).float()
+        loss = loss * mask
+
+        # Normalize the loss by the number of positive pairs
+        num_positive_pairs = torch.sum(mask) - len(labels)
+        loss = loss.sum() / num_positive_pairs
+
+        return loss
