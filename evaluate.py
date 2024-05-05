@@ -18,8 +18,7 @@ model = TriModalModel(TextEncoder(embedding_dim=embedding_dim).to(device),
 model.load_state_dict(torch.load('best_model.pth'))
 model.eval()
 
-parent = "c:/Users/lalas/Documents/GitHub/simu_wrist_har/"
-#parent = "/home/lala/other/Repos/git/simu_wrist_har/"
+parent = config.parent
 val_path = parent + '/data/how2sign/val/tensors'
 
 dataset_val = TriDataset(get_data_files(val_path))
