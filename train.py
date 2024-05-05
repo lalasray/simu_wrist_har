@@ -1,19 +1,14 @@
 import os
-import sys
 import torch
-import torch.nn as nn
 import torch.optim as optim
-from torch.utils.data import DataLoader, TensorDataset
+from torch.utils.data import DataLoader
 from text_enc import TextEncoder
 from imu_enc import ImuEncoder
-from video_enc import VideoEncoder
 from pose_enc import PoseEncoder
-from loss import InfonceLoss
-from model import TriModalModel, QuadModalModel
+from model import TriModalModel
 from dataloader import TriDataset, get_data_files
 from torch.utils.data import ConcatDataset
 from torch.optim.lr_scheduler import ReduceLROnPlateau
-from pytorch_lightning import Trainer
 from pytorch_lightning.loggers import TensorBoardLogger
 import config
 
