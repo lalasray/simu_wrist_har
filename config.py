@@ -1,3 +1,5 @@
+from loss import InfonceLoss,InfonceLossForClustering
+
 imu_encoder_type = "spatiotemporal" #fc #cnn #res #lstm #spatiotemporal
 text_encoder_type = "res" #fc #cnn #res #spatial
 pose_type = "pose" #embedding 
@@ -14,3 +16,5 @@ batch_size_class = 32
 
 parent = "c:/Users/lalas/Documents/GitHub/simu_wrist_har/"
 #parent = "/home/lala/other/Repos/git/simu_wrist_har/"
+
+loss = InfonceLossForClustering() #InfonceLossForClustering() #InfonceLoss()

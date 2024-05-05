@@ -6,7 +6,7 @@ from pose_enc import PoseEncoder
 from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt
 from dataloader import TriDataset, get_data_files
-from torch.utils.data import ConcatDataset, DataLoader
+from torch.utils.data import DataLoader
 import config
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')

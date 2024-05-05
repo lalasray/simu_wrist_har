@@ -40,7 +40,7 @@ imu_encoder = ImuEncoder(embedding_dim=embedding_dim).to(device)
 pose_encoder = PoseEncoder(embedding_dim=embedding_dim).to(device)
 
 model = TriModalModel(text_encoder, imu_encoder, pose_encoder).to(device)
-criterion = InfonceLoss()
+criterion = config.loss
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 patience = config.patience
 best_val_loss = float('inf')
