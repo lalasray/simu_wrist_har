@@ -7,7 +7,7 @@ pose_encoder_type = "spatiotemporal"  #fc #cnn #res #spatiotemporal
 
 batch_size = 32
 embedding_dim = 2048
-num_epochs = 100
+num_epochs = 300
 patience = 10
 
 classes = 10

@@ -45,7 +45,7 @@ optimizer = optim.Adam(model.parameters(), lr=0.001)
 patience = config.patience
 best_val_loss = float('inf')
 counter = 0
-scheduler = ReduceLROnPlateau(optimizer, mode='min', patience=5)
+scheduler = ReduceLROnPlateau(optimizer, mode='min', patience=(config.patience)/2)
 
 local_log_dir = "local_logs"
 logger = TensorBoardLogger(local_log_dir, name="multimodal_experiment_cnn")
@@ -54,16 +54,26 @@ logger.log_hyperparams(hyperparameters)
 
 for epoch in range(num_epochs):
     total_loss = 0.0
+    t_i_loss_total = 0
+    t_p_loss_total = 0
+    i_p_loss_total = 0
     model.train() 
     for pose, imu, text in train_loader:
         optimizer.zero_grad()
         text_output, imu_output, pose_output = model(text, imu, pose)
         loss = criterion(text_output, imu_output) + criterion(text_output, pose_output) + criterion(imu_output, pose_output)
+        t_i_loss = criterion(text_output, imu_output)
+        t_p_loss = criterion(text_output, pose_output)
+        i_p_loss = criterion(imu_output, pose_output)
         loss.backward()
         optimizer.step()
         total_loss += loss.item()
+
     total_loss /= len(train_loader)
-    
+    t_i_loss_total /= len(train_loader)
+    t_p_loss_total /= len(train_loader)
+    i_p_loss_total /= len(train_loader)
+        
     model.eval()  
     val_loss = 0.0
     with torch.no_grad():
@@ -72,7 +82,7 @@ for epoch in range(num_epochs):
             loss = criterion(text_output, imu_output) + criterion(text_output, pose_output) + criterion(imu_output, pose_output)
             val_loss += loss.item()
     val_loss /= len(val_loader)
-    print(f"Epoch {epoch+1}, Validation Loss: {val_loss}, Train Loss: {total_loss}")
+    print(f"Epoch {epoch+1}, Validation Loss: {val_loss}, Train Loss: {total_loss} TexPose Loss: {t_p_loss}, TextImu Loss: {t_i_loss}, ImuPose Loss: {i_p_loss}")
     scheduler.step(val_loss)
     
     if val_loss < best_val_loss:
