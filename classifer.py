@@ -17,7 +17,7 @@ elif classifer_type == "lstm":
     
     print("ToDo") 
 
-elif classifer_type == "spatiotemporl":
+elif classifer_type == "spatiotemporal":
 
     print("ToDo") 
 
@@ -29,4 +29,5 @@ else:
 
         def forward(self, x):
             x = self.fc(x)
+
             return x
