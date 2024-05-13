@@ -12,7 +12,7 @@ patience = 10
 
 classifer_type = "multihead" #fc
 
-classes = 10
+classes = 11 #openpack11
 num_epochs_class = 100
 batch_size_class = 32
 

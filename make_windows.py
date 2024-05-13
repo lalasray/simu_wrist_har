@@ -66,16 +66,16 @@ elif data == "openpack":
                 imu_window = imu[idx:idx+pose_window_size]
                 label_window = label[idx:idx+pose_window_size]
                 imu_window_data = torch.tensor(imu_window)
-                label_data = torch.tensor(label_window)
+                label_window_data = torch.tensor(label_window)
                 save_path = '/home/lala/other/Repos/git/simu_wrist_har/data/openpack_uni/tensors/'
                 os.makedirs(save_path, exist_ok=True)
                 name, ext = os.path.splitext(filename)
                 window_filename = f"{name}_window{idx}.pt"
-                label_window_flat = label_data.flatten()
+                label_window_flat = label_window_data.flatten()
                 majority_label = torch.mode(label_window_flat, dim=0).values.item()
                 num_classes = 11
-                label_data = F.one_hot(torch.tensor(majority_label), num_classes=num_classes)
-                torch.save((imu, label_data), os.path.join(save_path, window_filename))
+                label_window_class = F.one_hot(torch.tensor(majority_label), num_classes=num_classes)
+                torch.save((imu_window_data, label_window_class), os.path.join(save_path, window_filename))
                 
 
 elif data == "mmfit_multi":

@@ -12,85 +12,58 @@ import config
 
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
 embedding_dim = config.embedding_dim
 encoder = TriModalModel(TextEncoder(embedding_dim=embedding_dim).to(device),
                         ImuEncoder(embedding_dim=embedding_dim).to(device),
                         PoseEncoder(embedding_dim=embedding_dim).to(device)).to(device)
 encoder.load_state_dict(torch.load('best_model.pth'))
-encoder.eval()
+imu_encoder = encoder.imu_encoder
+imu_encoder.eval()
 
-# Define classifier decoder
-num_classes = 10  
+num_classes = config.classes
 classifier_decoder = ClassifierDecoder(input_size=embedding_dim, num_classes=num_classes).to(device)
 
+class FineTunedModel(nn.Module):
+    def __init__(self, pretrained_model, classifier_decoder):
+        super(FineTunedModel, self).__init__()
+        self.pretrained_model = pretrained_model
+        self.classifier_decoder = classifier_decoder
+        
+    def forward(self, imu_input):
+        imu_output = self.pretrained_model(imu_input)
+        classification_logits = self.classifier_decoder(imu_output)
+        return classification_logits
+    
+fine_tuned_model = FineTunedModel(imu_encoder, classifier_decoder).to(device)
+
 parent = config.parent
-train_path = parent + '/data/openpack/train/tensors' 
-val_path = parent + '/data/openpack/val/tensors'
+train_path = parent + 'data/openpack_uni/tensors' 
+val_path = parent + 'data/openpack_uni/tensors'
 
-#train_dataset = TriDataset(get_data_files(train_path))
-#val_dataset = TriDataset(get_data_files(val_path))
-train_dataset = TriDataset(None)  # Pass None for random data
-val_dataset = TriDataset(None)  # Pass None for random data
+train_dataset = TriDataset(get_data_files(train_path))
+val_dataset = TriDataset(get_data_files(val_path))
 
-train_loader = DataLoader(train_dataset, batch_size=config.batch_size, shuffle=True)
-val_loader = DataLoader(val_dataset, batch_size=config.batch_size, shuffle=False)
+train_loader = DataLoader(train_dataset, batch_size=config.batch_size_class, shuffle=True)
+val_loader = DataLoader(val_dataset, batch_size=config.batch_size_class, shuffle=False)
 
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(classifier_decoder.parameters(), lr=0.001)
 
 
-num_epochs = 10 
+num_epochs = config.num_epochs_class
+
 for epoch in range(num_epochs):
-    classifier_decoder.train()
-    running_loss = 0.0
-    for _ in range(len(train_loader)):
-        # Generate random data
-        pose = torch.rand(config.batch_size, config.pose_input_dim).to(device)
-        imu = torch.rand(config.batch_size, config.imu_input_dim).to(device)
-        text = torch.randint(0, config.vocab_size, (config.batch_size, config.max_seq_length)).to(device)
-        labels = torch.randint(0, num_classes, (config.batch_size,)).to(device)
-        
-        # Forward pass
-        with torch.no_grad():
-            text_embedding, imu_embedding, pose_embedding = encoder(text, imu, pose)
-        outputs = classifier_decoder(imu_embedding)
-        
-        # Calculate loss
-        loss = criterion(outputs, labels)
-        
-        # Backward pass and optimization
+    fine_tuned_model.train()
+    total_train_loss = 0.0
+    for imu, label_data in train_loader:
+        print(imu.dtype)
         optimizer.zero_grad()
+        imu.double()
+        aclass_pred = fine_tuned_model(imu.to(device))
+        loss = criterion(aclass_pred, label_data.to(device))  
         loss.backward()
         optimizer.step()
-        
-        running_loss += loss.item()
-    
-    # Print statistics
-    print(f'Epoch [{epoch + 1}/{num_epochs}], Loss: {running_loss / len(train_loader)}')
+        total_train_loss += loss.item()
 
-    # Save model after each epoch
-    torch.save(classifier_decoder.state_dict(), f'classifier_decoder_epoch_{epoch + 1}.pth')
-
-# Evaluation
-classifier_decoder.eval()
-correct = 0
-total = 0
-with torch.no_grad():
-    for _ in range(len(val_loader)):
-        # Generate random data for validation
-        pose = torch.rand(config.batch_size, config.pose_input_dim).to(device)
-        imu = torch.rand(config.batch_size, config.imu_input_dim).to(device)
-        text = torch.randint(0, config.vocab_size, (config.batch_size, config.max_seq_length)).to(device)
-        labels = torch.randint(0, num_classes, (config.batch_size,)).to(device)
-        
-        # Forward pass
-        _, imu_embedding, _ = encoder(text, imu, pose)
-        outputs = classifier_decoder(imu_embedding)
-        
-        # Calculate accuracy
-        _, predicted = torch.max(outputs.data, 1)
-        total += labels.size(0)
-        correct += (predicted == labels).sum().item()
-
-print(f'Accuracy on validation set: {100 * correct / total}%')
+    print(f'Epoch [{epoch + 1}/{num_epochs}], Loss: {total_train_loss / len(train_loader)}')
+    torch.save(classifier_decoder.state_dict(), f'classifier_decoder_.pth')
