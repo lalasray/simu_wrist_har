@@ -39,7 +39,7 @@ fine_tuned_model = FineTunedModel(imu_encoder, classifier_decoder).to(device)
 
 parent = config.parent
 train_path = parent + 'data/openpack_uni/tensors' 
-val_path = parent + 'data/openpack_uni/val/tensors'
+val_path = parent + 'data/openpack_uni/tensors'
 
 train_dataset = TriDataset(get_data_files(train_path))
 val_dataset = TriDataset(get_data_files(val_path))
@@ -47,7 +47,7 @@ val_dataset = TriDataset(get_data_files(val_path))
 train_loader = DataLoader(train_dataset, batch_size=config.batch_size_class, shuffle=True)
 val_loader = DataLoader(val_dataset, batch_size=config.batch_size_class, shuffle=False)
 
-criterion = nn.CrossEntropyLoss()
+criterion = nn.MultiLabelSoftMarginLoss().to(device)  
 optimizer = optim.Adam(classifier_decoder.parameters(), lr=0.001)
 
 
@@ -59,10 +59,10 @@ for epoch in range(num_epochs):
     for imu, label_data in train_loader:
         imu = imu.to(device)
         imu_np = imu.detach().cpu().numpy()
-        imu_double = torch.tensor(imu_np, dtype=torch.float64).to(device)  
+        imu_double = torch.tensor(imu_np, dtype=torch.float32).to(device)  
         optimizer.zero_grad()
         aclass_pred = fine_tuned_model(imu_double)
-        loss = criterion(aclass_pred, label_data.to(device))  
+        loss = criterion(aclass_pred, label_data.float().to(device))  
         loss.backward()
         optimizer.step()
         total_train_loss += loss.item()
