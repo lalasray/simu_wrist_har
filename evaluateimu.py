@@ -1,27 +1,45 @@
 import torch
-import torch.nn as nn
-import torch.optim as optim
-from torch.utils.data import DataLoader
 from model import TriModalModel
 from text_enc import TextEncoder
 from imu_enc import ImuEncoder
 from pose_enc import PoseEncoder
+from sklearn.manifold import TSNE
+import matplotlib.pyplot as plt
+from dataloader import TriDataset, get_data_files
+from torch.utils.data import DataLoader
+import config
 from classifier import ClassifierDecoder  
 from dataloader_class import TriDataset, get_data_files
-import config
-
+import torch.nn as nn
+import torch.optim as optim
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 embedding_dim = config.embedding_dim
-encoder = TriModalModel(TextEncoder(embedding_dim=embedding_dim).to(device),
-                        ImuEncoder(embedding_dim=embedding_dim).to(device),
-                        PoseEncoder(embedding_dim=embedding_dim).to(device)).to(device)
-encoder.load_state_dict(torch.load('best_model.pth'))
-encoder.eval()
-imu_encoder = encoder.imu_encoder
 
-num_classes = config.classes
-classifier_decoder = ClassifierDecoder(input_size=embedding_dim, num_classes=num_classes).to(device)
+model = TriModalModel(TextEncoder(embedding_dim=embedding_dim).to(device),
+                      ImuEncoder(embedding_dim=embedding_dim).to(device),
+                      PoseEncoder(embedding_dim=embedding_dim).to(device)).to(device)
+
+model.load_state_dict(torch.load('best_model.pth'))
+model.eval()
+imu_encoder = model.imu_encoder
+parent = config.parent
+#val_path = parent + '/data/how2sign/val/tensors'
+
+#dataset_val = TriDataset(get_data_files(val_path))
+
+#loader = DataLoader(dataset_val, batch_size=config.batch_size, shuffle=False)
+
+#imu_embeddings = []
+
+#with torch.no_grad():
+#    for pose, imu, text in loader:
+#        imu_embedding= imu_encoder(imu)
+#        imu_embeddings.append(imu_embedding)
+#        print(imu_embedding.shape, imu.dtype)
+
+train_path = parent + 'data/openpack_uni/tensors' 
+classifier_decoder = ClassifierDecoder(input_size=embedding_dim, num_classes=config.classes).to(device)
 
 class FineTunedModel(nn.Module):
     def __init__(self, pretrained_model, classifier_decoder):
@@ -36,16 +54,8 @@ class FineTunedModel(nn.Module):
 
     
 fine_tuned_model = FineTunedModel(imu_encoder, classifier_decoder).to(device)
-
-parent = config.parent
-train_path = parent + 'data/openpack_uni/tensors' 
-val_path = parent + 'data/openpack_uni/val/tensors'
-
 train_dataset = TriDataset(get_data_files(train_path))
-val_dataset = TriDataset(get_data_files(val_path))
-
 train_loader = DataLoader(train_dataset, batch_size=config.batch_size_class, shuffle=True)
-val_loader = DataLoader(val_dataset, batch_size=config.batch_size_class, shuffle=False)
 
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(classifier_decoder.parameters(), lr=0.001)
@@ -57,11 +67,8 @@ for epoch in range(num_epochs):
     fine_tuned_model.train()
     total_train_loss = 0.0
     for imu, label_data in train_loader:
-        imu = imu.to(device)
-        imu_np = imu.detach().cpu().numpy()
-        imu_double = torch.tensor(imu_np, dtype=torch.float64).to(device)  
         optimizer.zero_grad()
-        aclass_pred = fine_tuned_model(imu_double)
+        aclass_pred = fine_tuned_model(imu.to(device))
         loss = criterion(aclass_pred, label_data.to(device))  
         loss.backward()
         optimizer.step()
