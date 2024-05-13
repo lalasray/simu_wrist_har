@@ -1,69 +1,96 @@
 import torch
+import torch.nn as nn
+import torch.optim as optim
+from torch.utils.data import DataLoader
 from model import TriModalModel
 from text_enc import TextEncoder
 from imu_enc import ImuEncoder
 from pose_enc import PoseEncoder
-from sklearn.manifold import TSNE
-import matplotlib.pyplot as plt
-from dataloader import TriDataset, get_data_files
-from torch.utils.data import DataLoader
+from classifier import ClassifierDecoder  
+from dataloader_class import TriDataset, get_data_files
 import config
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-embedding_dim = config.embedding_dim
 
-model = TriModalModel(TextEncoder(embedding_dim=embedding_dim).to(device),
-                      ImuEncoder(embedding_dim=embedding_dim).to(device),
-                      PoseEncoder(embedding_dim=embedding_dim).to(device)).to(device)
-model.load_state_dict(torch.load('best_model.pth'))
-model.eval()
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+embedding_dim = config.embedding_dim
+encoder = TriModalModel(TextEncoder(embedding_dim=embedding_dim).to(device),
+                        ImuEncoder(embedding_dim=embedding_dim).to(device),
+                        PoseEncoder(embedding_dim=embedding_dim).to(device)).to(device)
+encoder.load_state_dict(torch.load('best_model.pth'))
+encoder.eval()
+
+# Define classifier decoder
+num_classes = 10  
+classifier_decoder = ClassifierDecoder(input_size=embedding_dim, num_classes=num_classes).to(device)
 
 parent = config.parent
-val_path = parent + '/data/how2sign/val/tensors'
+train_path = parent + '/data/openpack/train/tensors' 
+val_path = parent + '/data/openpack/val/tensors'
 
-dataset_val = TriDataset(get_data_files(val_path))
+#train_dataset = TriDataset(get_data_files(train_path))
+#val_dataset = TriDataset(get_data_files(val_path))
+train_dataset = TriDataset(None)  # Pass None for random data
+val_dataset = TriDataset(None)  # Pass None for random data
 
-loader = DataLoader(dataset_val, batch_size=config.batch_size, shuffle=False)
+train_loader = DataLoader(train_dataset, batch_size=config.batch_size, shuffle=True)
+val_loader = DataLoader(val_dataset, batch_size=config.batch_size, shuffle=False)
 
-text_embeddings = []
-imu_embeddings = []
-pose_embeddings = []
+criterion = nn.CrossEntropyLoss()
+optimizer = optim.Adam(classifier_decoder.parameters(), lr=0.001)
 
+
+num_epochs = 10 
+for epoch in range(num_epochs):
+    classifier_decoder.train()
+    running_loss = 0.0
+    for _ in range(len(train_loader)):
+        # Generate random data
+        pose = torch.rand(config.batch_size, config.pose_input_dim).to(device)
+        imu = torch.rand(config.batch_size, config.imu_input_dim).to(device)
+        text = torch.randint(0, config.vocab_size, (config.batch_size, config.max_seq_length)).to(device)
+        labels = torch.randint(0, num_classes, (config.batch_size,)).to(device)
+        
+        # Forward pass
+        with torch.no_grad():
+            text_embedding, imu_embedding, pose_embedding = encoder(text, imu, pose)
+        outputs = classifier_decoder(imu_embedding)
+        
+        # Calculate loss
+        loss = criterion(outputs, labels)
+        
+        # Backward pass and optimization
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+        
+        running_loss += loss.item()
+    
+    # Print statistics
+    print(f'Epoch [{epoch + 1}/{num_epochs}], Loss: {running_loss / len(train_loader)}')
+
+    # Save model after each epoch
+    torch.save(classifier_decoder.state_dict(), f'classifier_decoder_epoch_{epoch + 1}.pth')
+
+# Evaluation
+classifier_decoder.eval()
+correct = 0
+total = 0
 with torch.no_grad():
-    for pose, imu, text in loader:
-        text_embedding, imu_embedding, pose_embedding = model(text, imu, pose)
-        text_embeddings.append(text_embedding)
-        imu_embeddings.append(imu_embedding)
-        pose_embeddings.append(pose_embedding)
+    for _ in range(len(val_loader)):
+        # Generate random data for validation
+        pose = torch.rand(config.batch_size, config.pose_input_dim).to(device)
+        imu = torch.rand(config.batch_size, config.imu_input_dim).to(device)
+        text = torch.randint(0, config.vocab_size, (config.batch_size, config.max_seq_length)).to(device)
+        labels = torch.randint(0, num_classes, (config.batch_size,)).to(device)
+        
+        # Forward pass
+        _, imu_embedding, _ = encoder(text, imu, pose)
+        outputs = classifier_decoder(imu_embedding)
+        
+        # Calculate accuracy
+        _, predicted = torch.max(outputs.data, 1)
+        total += labels.size(0)
+        correct += (predicted == labels).sum().item()
 
-text_embeddings = torch.cat(text_embeddings, dim=0)
-imu_embeddings = torch.cat(imu_embeddings, dim=0)
-pose_embeddings = torch.cat(pose_embeddings, dim=0)
-
-tsne = TSNE(n_components=2, random_state=42)
-
-text_tsne = tsne.fit_transform(text_embeddings.cpu())
-imu_tsne = tsne.fit_transform(imu_embeddings.cpu())
-pose_tsne = tsne.fit_transform(pose_embeddings.cpu())
-
-plt.figure(figsize=(15, 5))
-
-plt.subplot(1, 4, 1)
-plt.title('Text Modality')
-plt.scatter(text_tsne[:, 0], text_tsne[:, 1], s=5)
-
-plt.subplot(1, 4, 2)
-plt.title('IMU Modality')
-plt.scatter(imu_tsne[:, 0], imu_tsne[:, 1], s=5)
-
-plt.subplot(1, 4, 3)
-plt.title('Pose Modality')
-plt.scatter(pose_tsne[:, 0], pose_tsne[:, 1], s=5)
-
-plt.subplot(1, 4, 4)
-plt.title('All Modality')
-plt.scatter(pose_tsne[:, 0], pose_tsne[:, 1], s=1)
-plt.scatter(text_tsne[:, 0], text_tsne[:, 1], s=1)
-plt.scatter(imu_tsne[:, 0], imu_tsne[:, 1], s=1)
-
-plt.show()
+print(f'Accuracy on validation set: {100 * correct / total}%')
