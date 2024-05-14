@@ -9,7 +9,6 @@ from model import TriModalModel
 from dataloader import TriDataset, get_data_files
 from torch.utils.data import ConcatDataset
 from torch.optim.lr_scheduler import ReduceLROnPlateau
-from pytorch_lightning.loggers import TensorBoardLogger
 import config
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -43,9 +42,7 @@ counter = 0
 scheduler = ReduceLROnPlateau(optimizer, mode='min', patience=(config.patience)/2)
 
 local_log_dir = "local_logs"
-logger = TensorBoardLogger(local_log_dir, name="multimodal_experiment_cnn")
 hyperparameters = {"embedding_dim": embedding_dim, "batch_size": batch_size}
-logger.log_hyperparams(hyperparameters)
 
 for epoch in range(num_epochs):
     total_loss = 0.0
@@ -89,5 +86,3 @@ for epoch in range(num_epochs):
         if counter >= patience:
             print("Validation loss hasn't decreased for ", patience, " epochs. Early stopping...")
             break 
-
-    logger.log_metrics({"train_loss": total_loss, "val_loss": val_loss}, step=epoch)

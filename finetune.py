@@ -9,7 +9,10 @@ from pose_enc import PoseEncoder
 from classifier import ClassifierDecoder  
 from dataloader_class import TriDataset, get_data_files
 import config
+from sklearn.metrics import f1_score
 
+def calculate_f1_score(y_true, y_pred):
+    return f1_score(y_true, y_pred, average='macro')
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 embedding_dim = config.embedding_dim
@@ -50,21 +53,54 @@ optimizer = optim.Adam(fine_tuned_model.parameters(), lr=0.001)
 
 num_epochs = config.num_epochs_class
 
+best_f1_score = 0.0
+early_stopping_counter = 0
+early_stopping_criteria = config.early_stopping_criteria  # Define a criteria for early stopping
+patience = config.patience
+
 for epoch in range(num_epochs):
     fine_tuned_model.train()
     total_train_loss = 0.0
+    
     for imu, label_data in train_loader:
-
         imu = imu.to(device)
-        imu_np = imu.detach().cpu().numpy()
-        imu_double = torch.tensor(imu_np, dtype=torch.float32).to(device)  
+        label_data = label_data.to(device)
+        
         optimizer.zero_grad()
-        aclass_pred = fine_tuned_model(imu_double)
-        loss = criterion(aclass_pred, label_data.long().flatten().to(device))  
+        aclass_pred = fine_tuned_model(imu)
+        loss = criterion(aclass_pred, label_data.long().flatten())  
         loss.backward()
         optimizer.step()
         total_train_loss += loss.item()
+    
+    # Validation
+    fine_tuned_model.eval()
+    with torch.no_grad():
+        all_predictions = []
+        all_labels = []
         
-    print(f'Epoch [{epoch + 1}/{num_epochs}], Loss: {total_train_loss / len(train_loader)}')
-    #torch.save(classifier_decoder.state_dict(), f'classifier_decoder_.pth')
-    torch.save(fine_tuned_model.state_dict(), f'classifier_decoder_.pth')
+        for imu, label_data in val_loader:
+            imu = imu.to(device)
+            label_data = label_data.to(device)
+            
+            aclass_pred = fine_tuned_model(imu)
+            _, predicted = torch.max(aclass_pred, 1)
+            all_predictions.extend(predicted.cpu().numpy())
+            all_labels.extend(label_data.cpu().numpy())
+        
+        # Calculate validation F1 score
+        val_f1_score = calculate_f1_score(all_labels, all_predictions)
+        
+        print(f'Epoch [{epoch + 1}/{num_epochs}], Loss: {total_train_loss / len(train_loader)}, Validation F1 Score: {val_f1_score}')
+        
+        # Check for early stopping
+        if val_f1_score > best_f1_score:
+            best_f1_score = val_f1_score
+            early_stopping_counter = 0
+            # Save the model if it's the best so far
+            torch.save(fine_tuned_model.state_dict(), 'best_model.pth')
+        else:
+            early_stopping_counter += 1
+            if early_stopping_counter >= patience:
+                print("Early stopping...")
+                break

@@ -13,7 +13,7 @@ patience = 10
 classifer_type = "multihead" #fc
 
 classes = 11 #openpack11
-num_epochs_class = 20
+num_epochs_class = 50
 batch_size_class = 64
 
 #parent = "c:/Users/lalas/Documents/GitHub/simu_wrist_har/"
