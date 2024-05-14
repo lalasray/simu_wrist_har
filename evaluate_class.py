@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
+from sklearn.metrics import confusion_matrix, f1_score
 from model import TriModalModel
 from text_enc import TextEncoder
 from imu_enc import ImuEncoder
@@ -8,19 +9,19 @@ from pose_enc import PoseEncoder
 from classifier import ClassifierDecoder  
 from dataloader_class import TriDataset, get_data_files
 import config
-from sklearn.metrics import f1_score, accuracy_score
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 embedding_dim = config.embedding_dim
+
 encoder = TriModalModel(TextEncoder(embedding_dim=embedding_dim).to(device),
                         ImuEncoder(embedding_dim=embedding_dim).to(device),
                         PoseEncoder(embedding_dim=embedding_dim).to(device)).to(device)
+
 encoder.load_state_dict(torch.load('best_model.pth'))
 encoder.eval()
 imu_encoder = encoder.imu_encoder
 
-num_classes = config.classes
-classifier_decoder = ClassifierDecoder(input_size=embedding_dim, num_classes=num_classes).to(device)
+classifier_decoder = ClassifierDecoder(input_size=embedding_dim, num_classes=1).to(device)
 
 class FineTunedModel(nn.Module):
     def __init__(self, pretrained_model, classifier_decoder):
@@ -32,49 +33,45 @@ class FineTunedModel(nn.Module):
         imu_output = self.pretrained_model(imu_input)
         classification_logits = self.classifier_decoder(imu_output)
         return classification_logits
-    
+
 fine_tuned_model = FineTunedModel(imu_encoder, classifier_decoder).to(device)
 
 parent = config.parent
-val_path = parent + 'data/openpack_uni/val/tensors'
+test_path = parent + 'data/openpack_uni/test/tensors'
 
-val_dataset = TriDataset(get_data_files(val_path))
-val_loader = DataLoader(val_dataset, batch_size=1, shuffle=False)
+test_dataset = TriDataset(get_data_files(test_path))
+test_loader = DataLoader(test_dataset, batch_size=config.batch_size_class, shuffle=False)
 
-criterion = nn.MultiLabelSoftMarginLoss().to(device)
+criterion = nn.BCEWithLogitsLoss().to(device)
 
-# Evaluation
+# Load fine-tuned model weights
+fine_tuned_model.load_state_dict(torch.load('fine_tuned_model.pth'))
+
 fine_tuned_model.eval()
-total_val_loss = 0.0
+total_test_loss = 0.0
 predictions = []
-targets = []
+true_labels = []
 
 with torch.no_grad():
-    for imu, label_data in val_loader:
+    for imu, label_data in test_loader:
         imu = imu.to(device)
         imu_np = imu.detach().cpu().numpy()
-        imu_double = torch.tensor(imu_np, dtype=torch.float32).to(device)  
+        imu_double = torch.tensor(imu_np, dtype=torch.float32).to(device)
         aclass_pred = fine_tuned_model(imu_double)
         loss = criterion(aclass_pred, label_data.float().to(device))
-        total_val_loss += loss.item()
-        
-        # Convert logits to predictions by thresholding at 0.5
-        predicted = (aclass_pred > 0).float()  # Assuming logits, no thresholding
-        predictions.extend(predicted.cpu().numpy())
-        targets.extend(label_data.cpu().numpy())
-        #print(label_data, label_data.argmax(dim=1))
-        break
+        total_test_loss += loss.item()
+        predictions.extend(torch.sigmoid(aclass_pred).cpu().numpy())
+        true_labels.extend(label_data.numpy())
 
-# Convert one-hot encoded targets and predictions to binary labels
-targets_binary = torch.tensor(targets).argmax(dim=1)
-predictions_binary = torch.tensor(predictions).argmax(dim=1)
+print(f'Test Loss: {total_test_loss / len(test_loader)}')
 
-# Calculate accuracy
-accuracy = accuracy_score(targets_binary, predictions_binary)
+predictions = [1 if pred > 0.5 else 0 for pred in predictions]
+
+# Calculate confusion matrix
+conf_matrix = confusion_matrix(true_labels, predictions)
+print("Confusion Matrix:")
+print(conf_matrix)
 
 # Calculate F1 score
-f1 = f1_score(targets_binary, predictions_binary, average='micro')
-
-print(f'Validation Loss: {total_val_loss / len(val_loader)}')
-print(f'Validation Accuracy: {accuracy * 100}%')
-print(f'F1 Score: {f1}')
+f1 = f1_score(true_labels, predictions)
+print("F1 Score:", f1)
