@@ -10,6 +10,7 @@ from classifier import ClassifierDecoder
 from dataloader_class import TriDataset, get_data_files
 import config
 from sklearn.metrics import f1_score
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 def calculate_f1_score(y_true, y_pred):
     return f1_score(y_true, y_pred, average='macro')
@@ -50,12 +51,13 @@ val_loader = DataLoader(val_dataset, batch_size=config.batch_size_class, shuffle
 
 criterion = nn.CrossEntropyLoss().to(device)  
 optimizer = optim.Adam(fine_tuned_model.parameters(), lr=0.001)
-
+scheduler = ReduceLROnPlateau(optimizer, mode='max', patience=(config.patience))
 num_epochs = config.num_epochs_class
 
 best_f1_score = 0.0
 early_stopping_counter = 0
-early_stopping_criteria = config.early_stopping_criteria  # Define a criteria for early stopping
+early_stopping_criteria = 0.01
+previous_best_f1_score = 0.0
 patience = config.patience
 
 for epoch in range(num_epochs):
@@ -73,7 +75,6 @@ for epoch in range(num_epochs):
         optimizer.step()
         total_train_loss += loss.item()
     
-    # Validation
     fine_tuned_model.eval()
     with torch.no_grad():
         all_predictions = []
@@ -88,19 +89,18 @@ for epoch in range(num_epochs):
             all_predictions.extend(predicted.cpu().numpy())
             all_labels.extend(label_data.cpu().numpy())
         
-        # Calculate validation F1 score
         val_f1_score = calculate_f1_score(all_labels, all_predictions)
         
         print(f'Epoch [{epoch + 1}/{num_epochs}], Loss: {total_train_loss / len(train_loader)}, Validation F1 Score: {val_f1_score}')
-        
-        # Check for early stopping
-        if val_f1_score > best_f1_score:
-            best_f1_score = val_f1_score
+        scheduler.step(val_f1_score)
+
+        if val_f1_score > previous_best_f1_score:
+            improvement = val_f1_score - previous_best_f1_score
+            early_stopping_criteria = max(early_stopping_criteria, improvement)
+            previous_best_f1_score = val_f1_score
             early_stopping_counter = 0
-            # Save the model if it's the best so far
-            torch.save(fine_tuned_model.state_dict(), 'best_model.pth')
+            torch.save(fine_tuned_model.state_dict(), 'classifier_decoder_.pth')
         else:
             early_stopping_counter += 1
             if early_stopping_counter >= patience:
                 print("Early stopping...")
-                break
