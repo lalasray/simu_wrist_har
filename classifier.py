@@ -8,7 +8,7 @@ decoder = classifer_type
 if decoder == "multihead":
 
     class ClassifierDecoder(nn.Module):
-        def __init__(self, input_size, num_classes, cnn_channels=128, cnn_kernel_size=1, num_heads=8):
+        def __init__(self, input_size, num_classes = 1, cnn_channels=128, cnn_kernel_size=1, num_heads=8):
             super(ClassifierDecoder, self).__init__()
             self.cnn = nn.Sequential(
                 nn.Conv1d(in_channels=1, out_channels=cnn_channels, kernel_size=cnn_kernel_size),

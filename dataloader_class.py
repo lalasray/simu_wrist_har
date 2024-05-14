@@ -15,7 +15,8 @@ class TriDataset(Dataset):
 
     def __getitem__(self, idx):
         imu, label_data = torch.load(self.data_files[idx])
-        return imu, label_data
+        label = torch.argmax(label_data).unsqueeze(0)
+        return imu, label
 
 def get_data_files(data_path):
     data_files = []
