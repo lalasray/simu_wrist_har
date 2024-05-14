@@ -3,7 +3,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 from config import classifer_type
 
-decoder = classifer_type
+#decoder = classifer_type
+decoder = "attention"
 
 if decoder == "multihead":
 
@@ -28,6 +29,25 @@ if decoder == "multihead":
             attended_features = attended_features.permute(1, 2, 0)  
             output = self.fc(attended_features.mean(dim=2))
             return output
+        
+elif decoder == "attention":
+
+    class ClassifierDecoder(nn.Module):
+        def __init__(self, input_size, num_classes = 11, cnn_channels=128, cnn_kernel_size=1, num_heads=1):
+            super(ClassifierDecoder, self).__init__()            
+            self.multihead_attention = nn.MultiheadAttention(embed_dim=1, num_heads=num_heads)
+            
+            self.fc = nn.Linear(1, num_classes)
+
+        def forward(self, x):
+            x = x.unsqueeze(1)
+            features = x
+            features = features.permute(2, 0, 1)  
+            attended_features, _ = self.multihead_attention(features, features, features)
+            attended_features = attended_features.permute(1, 2, 0)  
+            output = self.fc(attended_features.mean(dim=2))
+            return output
+
 else: 
     class ClassifierDecoder(nn.Module):
         def __init__(self, input_size, num_classes):

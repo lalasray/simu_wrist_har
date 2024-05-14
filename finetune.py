@@ -20,7 +20,7 @@ embedding_dim = config.embedding_dim
 encoder = TriModalModel(TextEncoder(embedding_dim=embedding_dim).to(device),
                         ImuEncoder(embedding_dim=embedding_dim).to(device),
                         PoseEncoder(embedding_dim=embedding_dim).to(device)).to(device)
-encoder.load_state_dict(torch.load('best_model.pth'))
+#encoder.load_state_dict(torch.load('best_model.pth'))
 imu_encoder = encoder.imu_encoder
 
 classifier_decoder = ClassifierDecoder(input_size=embedding_dim, num_classes=config.classes).to(device)
