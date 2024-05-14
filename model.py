@@ -12,9 +12,9 @@ class TriModalModel(nn.Module):
         text_output = self.text_encoder(text_input)
         imu_output = self.imu_encoder(imu_input)
         pose_output = self.pose_encoder(pose_input)
-        text_output = F.normalize(text_output, p=2, dim=1)
-        imu_output = F.normalize(imu_output, p=2, dim=1)
-        pose_output = F.normalize(pose_output, p=2, dim=1)
+        #text_output = F.normalize(text_output, p=2, dim=1)
+        #imu_output = F.normalize(imu_output, p=2, dim=1)
+        #pose_output = F.normalize(pose_output, p=2, dim=1)
         
         return text_output, imu_output, pose_output
 

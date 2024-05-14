@@ -20,7 +20,7 @@ embedding_dim = config.embedding_dim
 encoder = TriModalModel(TextEncoder(embedding_dim=embedding_dim).to(device),
                         ImuEncoder(embedding_dim=embedding_dim).to(device),
                         PoseEncoder(embedding_dim=embedding_dim).to(device)).to(device)
-#encoder.load_state_dict(torch.load('best_model.pth'))
+encoder.load_state_dict(torch.load('best_model.pth'))
 imu_encoder = encoder.imu_encoder
 
 classifier_decoder = ClassifierDecoder(input_size=embedding_dim, num_classes=config.classes).to(device)
@@ -69,7 +69,7 @@ for epoch in range(num_epochs):
         label_data = label_data.to(device)
         
         optimizer.zero_grad()
-        aclass_pred = fine_tuned_model(imu)
+        aclass_pred = fine_tuned_model(imu.float())
         loss = criterion(aclass_pred, label_data.long().flatten())  
         loss.backward()
         optimizer.step()
@@ -84,7 +84,7 @@ for epoch in range(num_epochs):
             imu = imu.to(device)
             label_data = label_data.to(device)
             
-            aclass_pred = fine_tuned_model(imu)
+            aclass_pred = fine_tuned_model(imu.float())
             _, predicted = torch.max(aclass_pred, 1)
             all_predictions.extend(predicted.cpu().numpy())
             all_labels.extend(label_data.cpu().numpy())
