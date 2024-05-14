@@ -5,7 +5,7 @@ from imu_enc import ImuEncoder
 from pose_enc import PoseEncoder
 from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt
-from dataloader import TriDataset, get_data_files
+from dataloader_class import TriDataset, get_data_files
 from torch.utils.data import DataLoader
 import config
 
@@ -20,34 +20,32 @@ model.load_state_dict(torch.load('best_model.pth'))
 model.eval()
 
 parent = config.parent
-val_path = parent + '/data/how2sign/val/tensors'
+val_path = parent + 'data/openpack_uni/test/tensors'
+val_dataset = TriDataset(get_data_files(val_path))
+loader = DataLoader(val_dataset, batch_size=config.batch_size_class, shuffle=False, num_workers=10,  drop_last=False, pin_memory=True)
 
-dataset_val = TriDataset(get_data_files(val_path))
-
-loader = DataLoader(dataset_val, batch_size=config.batch_size, shuffle=False)
 
 text_embeddings = []
 imu_embeddings = []
-pose_embeddings = []
 
 with torch.no_grad():
-    for pose, imu, text in loader:
-        text_embedding, imu_embedding, pose_embedding = model(text, imu, pose)
-        text_embeddings.append(text_embedding)
-        imu_embeddings.append(imu_embedding)
-        pose_embeddings.append(pose_embedding)
+    for imu, label_data in loader:
+        imu = imu.to(device)
+        label_data = label_data.to(device)
+        out = model.imu_encoder(imu.float())
+        text_embeddings.append(label_data)
+        imu_embeddings.append(out)
 
 text_embeddings = torch.cat(text_embeddings, dim=0)
 imu_embeddings = torch.cat(imu_embeddings, dim=0)
-pose_embeddings = torch.cat(pose_embeddings, dim=0)
 
-all_embeddings = torch.cat( [text_embeddings,imu_embeddings,pose_embeddings])
+#all_embeddings = torch.cat( [text_embeddings,imu_embeddings,pose_embeddings])
 tsne = TSNE(n_components=2, random_state=42, metric='cosine')
 
-text_tsne = tsne.fit_transform(text_embeddings.cpu())
+#text_tsne = tsne.fit_transform(text_embeddings.cpu())
 imu_tsne = tsne.fit_transform(imu_embeddings.cpu())
-pose_tsne = tsne.fit_transform(pose_embeddings.cpu())
-all_tsne = tsne.fit_transform(all_embeddings.cpu())
+#pose_tsne = tsne.fit_transform(pose_embeddings.cpu())
+#all_tsne = tsne.fit_transform(all_embeddings.cpu())
 plt.figure(figsize=(15, 5))
 
 plt.subplot(1, 4, 1)

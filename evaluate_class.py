@@ -36,7 +36,7 @@ fine_tuned_model = FineTunedModel(imu_encoder, classifier_decoder).to(device)
 fine_tuned_model.load_state_dict(torch.load('classifier_decoder_.pth'))
 
 parent = config.parent
-val_path = parent + 'data/openpack_uni/val/tensors'
+val_path = parent + 'data/openpack_uni/test/tensors'
 val_dataset = TriDataset(get_data_files(val_path))
 val_loader = DataLoader(val_dataset, batch_size=config.batch_size_class, shuffle=False, num_workers=10,  drop_last=False, pin_memory=True)
 

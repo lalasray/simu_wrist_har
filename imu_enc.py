@@ -150,17 +150,16 @@ elif imu_encoder_type == "hybrid_st":
             self.self_attention = nn.MultiheadAttention(embedding_dim, num_heads, dropout=0.1)
             self.layer_norm = nn.LayerNorm(embedding_dim)
             self.conv1 = nn.Conv1d(input_dim[0], 64, kernel_size=3, padding=2)
-            self.pool = nn.MaxPool1d(kernel_size=3, stride=3)
             self.conv2 = nn.Conv1d(64, 120, kernel_size=3, padding=1)
                     
         def forward(self, x):
             x = x.view(-1, x.size(2), x.size(1))
             x = self.conv1(x)
             x = F.relu(x)
-            x = self.pool(x)
+            #x = self.pool(x)
             x = self.conv2(x)
             x = F.relu(x)
-            x = self.pool(x)
+            #x = self.pool(x)
             x = x.reshape(x.shape[0], 12, -1)
             x = self.upsample(x)
             x = self.pos_encoding(x)
@@ -169,6 +168,7 @@ elif imu_encoder_type == "hybrid_st":
             attn_output = attn_output.permute(1, 0, 2) 
             attn_output = self.layer_norm(attn_output)
             context = torch.mean(attn_output, dim=1)
+            #'add attention'
 
             return context
 

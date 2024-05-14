@@ -5,7 +5,7 @@ text_encoder_type = "res" #fc #cnn #res #spatial
 pose_type = "pose" #embedding 
 pose_encoder_type = "spatiotemporal"  #fc #cnn #res #spatiotemporal
 
-batch_size = 16
+batch_size = 32
 embedding_dim = 256
 num_epochs = 300
 patience = 10
