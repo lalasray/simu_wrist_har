@@ -25,10 +25,12 @@ def get_data_files(data_path):
             data_files.append(os.path.join(data_path, file))
     return data_files
 
-#parent = config.parent
-#train_path = parent + 'data/openpack_uni/tensors' 
-#train_dataset = TriDataset(get_data_files(train_path))
-#data_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
-#for imu, label_data in data_loader:
-#    print(imu.type, label_data[0])
-#    break
+
+if __name__ == '__main__':
+    parent = config.parent
+    train_path = parent + 'data/openpack_uni/tensors' 
+    train_dataset = TriDataset(get_data_files(train_path))
+    data_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
+    for imu, label_data in data_loader:
+        print(imu.type, label_data[0])
+        break

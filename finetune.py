@@ -16,11 +16,10 @@ embedding_dim = config.embedding_dim
 encoder = TriModalModel(TextEncoder(embedding_dim=embedding_dim).to(device),
                         ImuEncoder(embedding_dim=embedding_dim).to(device),
                         PoseEncoder(embedding_dim=embedding_dim).to(device)).to(device)
-encoder.load_state_dict(torch.load('best_model.pth'))
-encoder.eval()
+#encoder.load_state_dict(torch.load('best_model.pth'))
 imu_encoder = encoder.imu_encoder
 
-classifier_decoder = ClassifierDecoder(input_size=embedding_dim, num_classes=1).to(device)
+classifier_decoder = ClassifierDecoder(input_size=embedding_dim, num_classes=11).to(device)
 
 class FineTunedModel(nn.Module):
     def __init__(self, pretrained_model, classifier_decoder):
@@ -37,7 +36,7 @@ class FineTunedModel(nn.Module):
 fine_tuned_model = FineTunedModel(imu_encoder, classifier_decoder).to(device)
 
 parent = config.parent
-train_path = parent + 'data/openpack_uni/tensors' 
+train_path = parent + 'data/openpack_uni/val/tensors' 
 val_path = parent + 'data/openpack_uni/val/tensors'
 
 train_dataset = TriDataset(get_data_files(train_path))
@@ -46,7 +45,7 @@ val_dataset = TriDataset(get_data_files(val_path))
 train_loader = DataLoader(train_dataset, batch_size=config.batch_size_class, shuffle=True)
 val_loader = DataLoader(val_dataset, batch_size=config.batch_size_class, shuffle=False)
 
-criterion = nn.BCEWithLogitsLoss().to(device)  
+criterion = nn.CrossEntropyLoss().to(device)  
 optimizer = optim.Adam(classifier_decoder.parameters(), lr=0.001)
 
 
@@ -56,12 +55,13 @@ for epoch in range(num_epochs):
     fine_tuned_model.train()
     total_train_loss = 0.0
     for imu, label_data in train_loader:
+
         imu = imu.to(device)
         imu_np = imu.detach().cpu().numpy()
         imu_double = torch.tensor(imu_np, dtype=torch.float32).to(device)  
         optimizer.zero_grad()
         aclass_pred = fine_tuned_model(imu_double)
-        loss = criterion(aclass_pred, label_data.float().to(device))  
+        loss = criterion(aclass_pred, label_data.long().flatten().to(device))  
         loss.backward()
         optimizer.step()
         total_train_loss += loss.item()

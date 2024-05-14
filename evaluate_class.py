@@ -17,8 +17,7 @@ encoder = TriModalModel(TextEncoder(embedding_dim=embedding_dim).to(device),
                         ImuEncoder(embedding_dim=embedding_dim).to(device),
                         PoseEncoder(embedding_dim=embedding_dim).to(device)).to(device)
 
-encoder.load_state_dict(torch.load('best_model.pth'))
-encoder.eval()
+#encoder.load_state_dict(torch.load('best_model.pth'))
 imu_encoder = encoder.imu_encoder
 
 classifier_decoder = ClassifierDecoder(input_size=embedding_dim, num_classes=1).to(device)
@@ -37,15 +36,15 @@ class FineTunedModel(nn.Module):
 fine_tuned_model = FineTunedModel(imu_encoder, classifier_decoder).to(device)
 
 parent = config.parent
-test_path = parent + 'data/openpack_uni/test/tensors'
+test_path = parent + 'data/openpack_uni/val/tensors'
 
 test_dataset = TriDataset(get_data_files(test_path))
 test_loader = DataLoader(test_dataset, batch_size=config.batch_size_class, shuffle=False)
 
-criterion = nn.BCEWithLogitsLoss().to(device)
+criterion = nn.CrossEntropyLoss().to(device)  
 
 # Load fine-tuned model weights
-fine_tuned_model.load_state_dict(torch.load('fine_tuned_model.pth'))
+fine_tuned_model.load_state_dict(torch.load('classifier_decoder_.pth'))
 
 fine_tuned_model.eval()
 total_test_loss = 0.0
@@ -58,7 +57,7 @@ with torch.no_grad():
         imu_np = imu.detach().cpu().numpy()
         imu_double = torch.tensor(imu_np, dtype=torch.float32).to(device)
         aclass_pred = fine_tuned_model(imu_double)
-        loss = criterion(aclass_pred, label_data.float().to(device))
+        loss = criterion(aclass_pred, label_data.long().flatten().to(device))
         total_test_loss += loss.item()
         predictions.extend(torch.sigmoid(aclass_pred).cpu().numpy())
         true_labels.extend(label_data.numpy())

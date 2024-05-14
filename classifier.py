@@ -8,7 +8,7 @@ decoder = classifer_type
 if decoder == "multihead":
 
     class ClassifierDecoder(nn.Module):
-        def __init__(self, input_size, num_classes = 1, cnn_channels=128, cnn_kernel_size=1, num_heads=8):
+        def __init__(self, input_size, num_classes = 11, cnn_channels=128, cnn_kernel_size=1, num_heads=8):
             super(ClassifierDecoder, self).__init__()
             self.cnn = nn.Sequential(
                 nn.Conv1d(in_channels=1, out_channels=cnn_channels, kernel_size=cnn_kernel_size),
@@ -39,19 +39,19 @@ else:
             imp_flat = imp.view(imp.size(0), -1) 
             #text_flat = text.view(text.size(0), -1)  
             #combined = torch.cat((imp_flat, text_flat), dim=1) 
-            out = F.relu(self.fc1(imp_flat)) 
+            out = F.leaky_relu(self.fc1(imp_flat)) 
             out = self.fc2(out)
             return out
 
+if __name__ == '__main__':
+    batch_size = 32
+    input_size = 2048
+    random_input = torch.randn(batch_size,input_size)
+    print("Shape of random_input:", random_input.shape)  # Verify the shape
 
-#batch_size = 32
-#input_size = 2048
-#random_input = torch.randn(batch_size,input_size)
-#print("Shape of random_input:", random_input.shape)  # Verify the shape
+    num_classes = 11
+    model = ClassifierDecoder(input_size=input_size, num_classes=num_classes)
 
-#num_classes = 10
-#model = ClassifierDecoder(input_size=input_size, num_classes=num_classes)
-
-# Now, let's check the forward pass
-#output = model(random_input)
-#print("Output shape:", output.shape)
+    # Now, let's check the forward pass
+    output = model(random_input)
+    print("Output shape:", output.shape)
