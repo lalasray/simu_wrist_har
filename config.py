@@ -1,11 +1,11 @@
 from loss import InfonceLoss,ContrastiveLoss
 
-imu_encoder_type = "spatiotemporal" #fc #cnn #res #lstm #spatiotemporal
+imu_encoder_type = "hybrid_st" #fc #cnn #res #lstm #spatiotemporal #hybrid_st
 text_encoder_type = "res" #fc #cnn #res #spatial
 pose_type = "pose" #embedding 
 pose_encoder_type = "spatiotemporal"  #fc #cnn #res #spatiotemporal
 
-batch_size = 32
+batch_size = 16
 embedding_dim = 256
 num_epochs = 300
 patience = 10

@@ -41,9 +41,10 @@ fine_tuned_model = FineTunedModel(imu_encoder, classifier_decoder).to(device)
 print(fine_tuned_model)
 parent = config.parent
 train_path = parent + 'data/openpack_uni/tensors' 
+test_path = parent + 'data/openpack_uni/train/tensors'
 val_path = parent + 'data/openpack_uni/val/tensors'
-
 train_dataset = TriDataset(get_data_files(train_path))
+test_dataset = TriDataset(get_data_files(test_path))
 val_dataset = TriDataset(get_data_files(val_path))
 
 train_loader = DataLoader(train_dataset, batch_size=config.batch_size_class, shuffle=True, drop_last=False, pin_memory=True, num_workers=10)
