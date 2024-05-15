@@ -14,7 +14,6 @@ if decoder == "multihead":
                 nn.Conv1d(in_channels= input_size, out_channels=cnn_channels, kernel_size=cnn_kernel_size),
                 nn.LeakyReLU(),
             )
-            
             self.multihead_attention = nn.MultiheadAttention(embed_dim=cnn_channels, num_heads=num_heads)
             #norm
             #leakyrelu
@@ -36,11 +35,11 @@ if decoder == "i_multihead":
     class ClassifierDecoder(nn.Module):
         def __init__(self, input_size = embedding_dim, num_classes = 11, cnn_channels=32, cnn_kernel_size=1, num_heads=8):
             super(ClassifierDecoder, self).__init__()
-            self.cnn = nn.Sequential(
-                nn.Conv1d(in_channels= input_size, out_channels=cnn_channels, kernel_size=cnn_kernel_size),
-                nn.LeakyReLU(),
-            )
-            
+            #multihead
+            #norm
+            #linear
+            #leakyrelu
+            #linear
             self.multihead_attention = nn.MultiheadAttention(embed_dim=cnn_channels, num_heads=num_heads)
             #norm
             #linear

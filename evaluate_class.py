@@ -10,6 +10,7 @@ from classifier import ClassifierDecoder
 from dataloader_class import TriDataset, get_data_files
 import config
 from sklearn.metrics import f1_score, confusion_matrix
+import numpy as np
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 embedding_dim = config.embedding_dim
