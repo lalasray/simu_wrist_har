@@ -1,19 +1,18 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from config import classifer_type
+from config import classifer_type,embedding_dim
 
 decoder = classifer_type
 
 if decoder == "multihead":
 
     class ClassifierDecoder(nn.Module):
-        def __init__(self, input_size, num_classes = 11, cnn_channels=128, cnn_kernel_size=1, num_heads=8):
+        def __init__(self, input_size = embedding_dim, num_classes = 11, cnn_channels=32, cnn_kernel_size=1, num_heads=8):
             super(ClassifierDecoder, self).__init__()
             self.cnn = nn.Sequential(
-                nn.Conv1d(in_channels=1, out_channels=cnn_channels, kernel_size=cnn_kernel_size),
+                nn.Conv1d(in_channels= input_size, out_channels=cnn_channels, kernel_size=cnn_kernel_size),
                 nn.ReLU(),
-                nn.MaxPool1d(kernel_size=2)
             )
             
             self.multihead_attention = nn.MultiheadAttention(embed_dim=cnn_channels, num_heads=num_heads)
@@ -22,25 +21,8 @@ if decoder == "multihead":
 
         def forward(self, x):
             x = x.unsqueeze(1)
+            x = x.permute(0, 2, 1)
             features = self.cnn(x)
-            features = features.permute(2, 0, 1)  
-            attended_features, _ = self.multihead_attention(features, features, features)
-            attended_features = attended_features.permute(1, 2, 0)  
-            output = self.fc(attended_features.mean(dim=2))
-            return output
-        
-elif decoder == "attention":
-
-    class ClassifierDecoder(nn.Module):
-        def __init__(self, input_size, num_classes = 11, cnn_channels=128, cnn_kernel_size=1, num_heads=1):
-            super(ClassifierDecoder, self).__init__()            
-            self.multihead_attention = nn.MultiheadAttention(embed_dim=1, num_heads=num_heads)
-            
-            self.fc = nn.Linear(1, num_classes)
-
-        def forward(self, x):
-            x = x.unsqueeze(1)
-            features = x
             features = features.permute(2, 0, 1)  
             attended_features, _ = self.multihead_attention(features, features, features)
             attended_features = attended_features.permute(1, 2, 0)  
@@ -64,7 +46,7 @@ else:
 
 if __name__ == '__main__':
     batch_size = 32
-    input_size = 2048
+    input_size = 256
     random_input = torch.randn(batch_size,input_size)
     print("Shape of random_input:", random_input.shape)  # Verify the shape
 
