@@ -11,7 +11,7 @@ if decoder == "multihead":
         def __init__(self, input_size = embedding_dim, num_classes = 11, cnn_channels=32, cnn_kernel_size=1, num_heads=8):
             super(ClassifierDecoder, self).__init__()
             self.cnn = nn.Sequential(
-                nn.Conv1d(in_channels= input_size, out_channels=cnn_channels, kernel_size=cnn_kernel_size),
+                nn.Conv1d(in_channels= embedding_dim, out_channels=cnn_channels, kernel_size=cnn_kernel_size),
                 nn.ReLU(),
             )
             
