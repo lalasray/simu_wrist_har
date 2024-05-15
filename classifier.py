@@ -12,7 +12,7 @@ if decoder == "multihead":
             super(ClassifierDecoder, self).__init__()
             self.cnn = nn.Sequential(
                 nn.Conv1d(in_channels= embedding_dim, out_channels=cnn_channels, kernel_size=cnn_kernel_size),
-                nn.ReLU(),
+                nn.LeakyReLU(),
             )
             
             self.multihead_attention = nn.MultiheadAttention(embed_dim=cnn_channels, num_heads=num_heads)
