@@ -33,7 +33,7 @@ class FineTunedModel(nn.Module):
         return classification_logits
 
 fine_tuned_model = FineTunedModel(imu_encoder, classifier_decoder).to(device)
-fine_tuned_model.load_state_dict(torch.load('classifier_decoder_.pth'))
+fine_tuned_model.load_state_dict(torch.load('0_no_lstm_multiheadclassifier_decoder_.pth'))
 
 parent = config.parent
 val_path = parent + 'data/openpack_uni/test/tensors'
