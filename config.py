@@ -1,6 +1,6 @@
 from loss import InfonceLoss,ContrastiveLoss
 
-imu_encoder_type = "lstm" #fc #cnn #res #lstm #spatiotemporal #hybrid_st
+imu_encoder_type = "spatiotemporal" #fc #cnn #res #lstm #spatiotemporal #hybrid_st
 text_encoder_type = "res" #fc #cnn #res #spatial
 pose_type = "pose" #embedding 
 pose_encoder_type = "spatiotemporal"  #fc #cnn #res #spatiotemporal
@@ -14,7 +14,7 @@ classifer_type = 'multihead' #multihead #fc #attention
 
 classes = 11 #openpack11
 num_epochs_class = 300
-batch_size_class = 64
+batch_size_class = 32
 
 #parent = "c:/Users/lalas/Documents/GitHub/simu_wrist_har/"
 parent = "/home/lala/other/Repos/git/simu_wrist_har/"

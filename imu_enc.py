@@ -4,6 +4,7 @@ import torch.nn.functional as F
 import config
 
 imu_encoder_type = config.imu_encoder_type
+
 if imu_encoder_type == "cnn":
 
     class ImuEncoder(nn.Module):

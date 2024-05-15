@@ -13,7 +13,7 @@ from sklearn.metrics import f1_score
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 
-for it in range(30):
+for it in range(5):
         
     def calculate_f1_score(y_true, y_pred):
         return f1_score(y_true, y_pred, average='macro')
@@ -44,7 +44,7 @@ for it in range(30):
     print(fine_tuned_model)
     parent = config.parent
     train_path = parent + 'data/openpack_uni/tensors' 
-    val_path = parent + 'data/openpack_uni/val'
+    val_path = parent + 'data/openpack_uni/test/tensors'
     train_dataset = TriDataset(get_data_files(train_path))
     val_dataset = TriDataset(get_data_files(val_path))
 

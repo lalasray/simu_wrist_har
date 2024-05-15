@@ -3,8 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from config import classifer_type
 
-#decoder = classifer_type
-decoder = "attention"
+decoder = classifer_type
 
 if decoder == "multihead":
 
