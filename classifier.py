@@ -11,11 +11,13 @@ if decoder == "multihead":
         def __init__(self, input_size = embedding_dim, num_classes = 11, cnn_channels=32, cnn_kernel_size=1, num_heads=8):
             super(ClassifierDecoder, self).__init__()
             self.cnn = nn.Sequential(
-                nn.Conv1d(in_channels= embedding_dim, out_channels=cnn_channels, kernel_size=cnn_kernel_size),
+                nn.Conv1d(in_channels= input_size, out_channels=cnn_channels, kernel_size=cnn_kernel_size),
                 nn.LeakyReLU(),
             )
             
             self.multihead_attention = nn.MultiheadAttention(embed_dim=cnn_channels, num_heads=num_heads)
+            #norm
+            #leakyrelu
             
             self.fc = nn.Linear(cnn_channels, num_classes)
 
@@ -29,6 +31,33 @@ if decoder == "multihead":
             output = self.fc(attended_features.mean(dim=2))
             return output
 
+if decoder == "i_multihead":
+
+    class ClassifierDecoder(nn.Module):
+        def __init__(self, input_size = embedding_dim, num_classes = 11, cnn_channels=32, cnn_kernel_size=1, num_heads=8):
+            super(ClassifierDecoder, self).__init__()
+            self.cnn = nn.Sequential(
+                nn.Conv1d(in_channels= input_size, out_channels=cnn_channels, kernel_size=cnn_kernel_size),
+                nn.LeakyReLU(),
+            )
+            
+            self.multihead_attention = nn.MultiheadAttention(embed_dim=cnn_channels, num_heads=num_heads)
+            #norm
+            #linear
+            #leakyrelu
+            
+            self.fc = nn.Linear(cnn_channels, num_classes)
+
+        def forward(self, x):
+            x = x.unsqueeze(1)
+            x = x.permute(0, 2, 1)
+            features = self.cnn(x)
+            features = features.permute(2, 0, 1)  
+            attended_features, _ = self.multihead_attention(features, features, features)
+            attended_features = attended_features.permute(1, 2, 0)  
+            output = self.fc(attended_features.mean(dim=2))
+            return output
+        
 else: 
     class ClassifierDecoder(nn.Module):
         def __init__(self, input_size, num_classes):

@@ -99,6 +99,49 @@ elif imu_encoder_type == "res":
                             
             return x
 
+elif imu_encoder_type == "i_spatiotemporal":
+
+    class ImuEncoder(nn.Module):
+        def __init__(self, input_dim=(12, 60), embedding_dim=1024, num_heads=8):
+            super(ImuEncoder, self).__init__()
+            self.embedding_dim = embedding_dim
+            self.upsample = nn.Linear(input_dim[1], embedding_dim)
+            self.pos_encoding = PositionalEncoding(embedding_dim, input_dim[1])
+            self.self_attention = nn.MultiheadAttention(embedding_dim, num_heads, dropout=0.1)
+            self.layer_norm = nn.LayerNorm(embedding_dim)
+                    
+        def forward(self, x):
+            x = x.view(-1, x.size(2), x.size(1))
+            x = self.upsample(x)
+            x = self.pos_encoding(x)
+            x = x.permute(1, 0, 2)
+            attn_output, _ = self.self_attention(x, x, x)
+            attn_output = attn_output.permute(1, 0, 2) 
+            attn_output = self.layer_norm(attn_output)
+            #linear
+            #realu
+            #linear
+            context = torch.mean(attn_output, dim=1)
+            return context
+
+    class PositionalEncoding(nn.Module):
+        def __init__(self, d_model, max_len=1000):
+            super(PositionalEncoding, self).__init__()
+            self.dropout = nn.Dropout(p=0.3)
+            self.embedding_dim = d_model
+                    
+            position = torch.arange(0, max_len).unsqueeze(1)
+            div_term = torch.exp(torch.arange(0, d_model, 2) * (-torch.log(torch.tensor(10000.0)) / d_model))
+            pe = torch.zeros(max_len, d_model)
+            pe[:, 0::2] = torch.sin(position * div_term)
+            pe[:, 1::2] = torch.cos(position * div_term)
+            self.register_buffer('pe', pe)
+
+        def forward(self, x):
+            x = x + self.pe[:x.size(1), :].unsqueeze(0) 
+            x = self.dropout(x)
+            return x
+
 elif imu_encoder_type == "spatiotemporal":
 
     class ImuEncoder(nn.Module):
@@ -150,17 +193,15 @@ elif imu_encoder_type == "hybrid_st":
             self.pos_encoding = PositionalEncoding(embedding_dim, input_dim[1])
             self.self_attention = nn.MultiheadAttention(embedding_dim, num_heads, dropout=0.1)
             self.layer_norm = nn.LayerNorm(embedding_dim)
-            self.conv1 = nn.Conv1d(input_dim[0], 64, kernel_size=3, padding=2)
-            self.conv2 = nn.Conv1d(64, 120, kernel_size=3, padding=1)
+            self.conv1 = nn.Conv1d(input_dim[0], 64, kernel_size=3, padding='same')
+            self.conv2 = nn.Conv1d(64, 120, kernel_size=3, padding='same')
                     
         def forward(self, x):
             x = x.view(-1, x.size(2), x.size(1))
             x = self.conv1(x)
             x = F.relu(x)
-            #x = self.pool(x)
             x = self.conv2(x)
             x = F.relu(x)
-            #x = self.pool(x)
             x = x.reshape(x.shape[0], 12, -1)
             x = self.upsample(x)
             x = self.pos_encoding(x)
@@ -168,6 +209,9 @@ elif imu_encoder_type == "hybrid_st":
             attn_output, _ = self.self_attention(x, x, x)
             attn_output = attn_output.permute(1, 0, 2) 
             attn_output = self.layer_norm(attn_output)
+            #linear
+            #realu
+            #linear
             context = torch.mean(attn_output, dim=1)
             #'add attention'
 
