@@ -16,7 +16,7 @@ model = TriModalModel(TextEncoder(embedding_dim=embedding_dim).to(device),
                       ImuEncoder(embedding_dim=embedding_dim).to(device),
                       PoseEncoder(embedding_dim=embedding_dim).to(device)).to(device)
                       
-model.load_state_dict(torch.load('best_model.pth'))
+model.load_state_dict(torch.load('best_model_fc.pth'))
 model.eval()
 
 parent = config.parent

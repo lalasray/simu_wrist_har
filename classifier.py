@@ -70,8 +70,6 @@ else:
         
         def forward(self, imp):
             imp_flat = imp.view(imp.size(0), -1) 
-            #text_flat = text.view(text.size(0), -1)  
-            #combined = torch.cat((imp_flat, text_flat), dim=1) 
             out = F.leaky_relu(self.fc1(imp_flat)) 
             out = self.fc2(out)
             return out

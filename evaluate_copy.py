@@ -16,11 +16,11 @@ model = TriModalModel(TextEncoder(embedding_dim=embedding_dim).to(device),
                       ImuEncoder(embedding_dim=embedding_dim).to(device),
                       PoseEncoder(embedding_dim=embedding_dim).to(device)).to(device)
                       
-model.load_state_dict(torch.load('best_model.pth'))
+model.load_state_dict(torch.load('best_model_fc.pth'))
 model.eval()
 
 parent = config.parent
-val_path = parent + 'data/openpack_uni/test/tensors'
+val_path = parent + 'data/openpack/test/'
 val_dataset = TriDataset(get_data_files(val_path))
 loader = DataLoader(val_dataset, batch_size=config.batch_size_class, shuffle=False, num_workers=10,  drop_last=False, pin_memory=True)
 
@@ -38,33 +38,22 @@ with torch.no_grad():
 
 text_embeddings = torch.cat(text_embeddings, dim=0)
 imu_embeddings = torch.cat(imu_embeddings, dim=0)
-
-#all_embeddings = torch.cat( [text_embeddings,imu_embeddings,pose_embeddings])
 tsne = TSNE(n_components=2, random_state=42, metric='cosine')
-
-#text_tsne = tsne.fit_transform(text_embeddings.cpu())
 imu_tsne = tsne.fit_transform(imu_embeddings.cpu())
-#pose_tsne = tsne.fit_transform(pose_embeddings.cpu())
-#all_tsne = tsne.fit_transform(all_embeddings.cpu())
-plt.figure(figsize=(15, 5))
 
-plt.subplot(1, 4, 1)
-plt.title('Text Modality')
-plt.scatter(text_tsne[:, 0], text_tsne[:, 1], s=5)
 
-plt.subplot(1, 4, 2)
-plt.title('IMU Modality')
-plt.scatter(imu_tsne[:, 0], imu_tsne[:, 1], s=5)
+#plt.figure(figsize=(15, 5))
 
-plt.subplot(1, 4, 3)
-plt.title('Pose Modality')
-plt.scatter(pose_tsne[:, 0], pose_tsne[:, 1], s=5)
+#plt.subplot(1, 3, 1)
+#plt.title('Raw IMU Modality')
+#plt.scatter(text_tsne[:, 0], text_tsne[:, 1], s=5)
 
-plt.subplot(1, 4, 4)
-plt.title('All Modality')
-s = len(text_embeddings)
-plt.scatter(all_tsne[0: s, 0], all_tsne[0: s, 1], s=1, color='b')
-plt.scatter(all_tsne[s: 2* s , 0], all_tsne[s:2*s, 1], s=1, color='g')
-plt.scatter(all_tsne[2*s:, 0], all_tsne[2*s:, 1], s=1, color='r')
+#plt.subplot(1, 3, 2)
+#plt.title('IMU Modality Frozen')
+#plt.scatter(imu_tsne[:, 0], imu_tsne[:, 1], s=5)
 
-plt.show()
+#plt.subplot(1, 3, 3)
+#plt.title('IMU Modality Finetuned')
+#plt.scatter(pose_tsne[:, 0], pose_tsne[:, 1], s=5)
+
+#plt.show()
