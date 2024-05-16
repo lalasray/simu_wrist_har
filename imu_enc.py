@@ -109,6 +109,8 @@ elif imu_encoder_type == "i_spatiotemporal":
             self.pos_encoding = PositionalEncoding(embedding_dim, input_dim[1])
             self.self_attention = nn.MultiheadAttention(embedding_dim, num_heads, dropout=0.1)
             self.layer_norm = nn.LayerNorm(embedding_dim)
+            self.fc1 = nn.Linear(embedding_dim*12, embedding_dim*6)
+            self.fc2 = nn.Linear(embedding_dim*6, embedding_dim*3)
                     
         def forward(self, x):
             x = x.view(-1, x.size(2), x.size(1))
@@ -118,9 +120,15 @@ elif imu_encoder_type == "i_spatiotemporal":
             attn_output, _ = self.self_attention(x, x, x)
             attn_output = attn_output.permute(1, 0, 2) 
             attn_output = self.layer_norm(attn_output)
-            #linear
-            #realu
-            #linear
+            print(attn_output.shape)
+            attn_output = attn_output.view(attn_output.shape[0], -1)
+            print(attn_output.shape)
+            attn_output = self.fc1(attn_output)
+            print(attn_output.shape)
+            x = torch.relu(x)
+            attn_output = self.fc2(attn_output)
+            attn_output= attn_output.reshape(attn_output.shape[0], -1, self.embedding_dim)
+            print(attn_output.shape)
             context = torch.mean(attn_output, dim=1)
             return context
 
@@ -300,10 +308,10 @@ else:
             batch_size = x.size(0)
             return self.encoder(x.view(batch_size, -1))
             
-#if __name__ == '__main__':
-#    batch_size = 16
-#    input_tensor = torch.randn(batch_size, 60, 12)
-#    model = ImuEncoder(embedding_dim = 512)
-#    print("input shape:", input_tensor.shape)
-#    output = model(input_tensor)
-#    print("Output shape:", output.shape)
+if __name__ == '__main__':
+    batch_size = 16
+    input_tensor = torch.randn(batch_size, 60, 12)
+    model = ImuEncoder(embedding_dim = 512)
+    print("input shape:", input_tensor.shape)
+    output = model(input_tensor)
+    print("Output shape:", output.shape)
