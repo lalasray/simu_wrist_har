@@ -23,7 +23,7 @@ for it in range(1):
     encoder = TriModalModel(TextEncoder(embedding_dim=embedding_dim).to(device),
                             ImuEncoder(embedding_dim=embedding_dim).to(device),
                             PoseEncoder(embedding_dim=embedding_dim).to(device)).to(device)
-    #encoder.load_state_dict(torch.load('best_model.pth'))
+    #encoder.load_state_dict(torch.load('best_model_fc.pth'))
     imu_encoder = encoder.imu_encoder
 
     classifier_decoder = ClassifierDecoder(input_size=embedding_dim, num_classes=config.classes).to(device)
@@ -43,8 +43,8 @@ for it in range(1):
     fine_tuned_model = FineTunedModel(imu_encoder, classifier_decoder).to(device)
     print(fine_tuned_model)
     parent = config.parent
-    train_path = parent + 'data/openpack/train' 
-    #train_path = parent + 'data/openpack_uni/tensors'
+    #train_path = parent + 'data/openpack/train' 
+    train_path = parent + 'data/openpack_uni/tensors'
     val_path = parent + 'data/openpack/u9'
     train_dataset = TriDataset(get_data_files(train_path))
     val_dataset = TriDataset(get_data_files(val_path))
