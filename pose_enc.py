@@ -29,7 +29,7 @@ if pose_type == "pose":
                 attn_output = self.layer_norm(attn_output)
                 attn_output = attn_output.view(attn_output.shape[0], -1)
                 attn_output = self.fc1(attn_output)
-                x = torch.relu(x)
+                x = nn.LeakyReLU(x)
                 attn_output = self.fc2(attn_output)
                 attn_output= attn_output.reshape(attn_output.shape[0], -1, self.embedding_dim)
                 context = torch.mean(attn_output, dim=1)
@@ -99,11 +99,11 @@ if pose_type == "pose":
         class PoseEncoder(nn.Module):
             def __init__(self, input_dim=(30,156), embedding_dim=512):
                 super(PoseEncoder, self).__init__()
-                self.conv1_1 = nn.Conv1d(in_channels=3, out_channels=32, kernel_size=3, padding=1)
-                self.conv1_2 = nn.Conv1d(in_channels=63, out_channels=32, kernel_size=3, padding=1)
-                self.conv1_3 = nn.Conv1d(in_channels=45, out_channels=32, kernel_size=3, padding=1)
-                self.conv2 = nn.Conv1d(in_channels=32, out_channels=128, kernel_size=3, padding=1)
-                self.conv3 = nn.Conv1d(in_channels=128, out_channels=256, kernel_size=3, padding=1)
+                self.conv1_1 = nn.Conv1d(in_channels=3, out_channels=32, kernel_size=3, padding='same')
+                self.conv1_2 = nn.Conv1d(in_channels=63, out_channels=32, kernel_size=3, padding='same')
+                self.conv1_3 = nn.Conv1d(in_channels=45, out_channels=32, kernel_size=3, padding='same')
+                self.conv2 = nn.Conv1d(in_channels=32, out_channels=128, kernel_size=3, padding='same')
+                self.conv3 = nn.Conv1d(in_channels=128, out_channels=256, kernel_size=3, padding='same')
                 self.pool = nn.MaxPool1d(kernel_size=3)
                 self.fc1 = nn.Linear(256 , embedding_dim) 
                 self.fc2 = nn.Linear(embedding_dim*4, embedding_dim*2)
@@ -124,15 +124,15 @@ if pose_type == "pose":
                         x = self.conv1_2(x)
                     else:
                         x = self.conv1_3(x)
-                    x = torch.relu(x)
+                    x = nn.LeakyReLU(x)
                     x = self.pool(x)
                     x = self.dropout(x)  
                     x = self.conv2(x)
-                    x = torch.relu(x)
+                    x = nn.LeakyReLU(x)
                     x = self.pool(x)
                     x = self.dropout(x)  
                     x = self.conv3(x)
-                    x = torch.relu(x)
+                    x = nn.LeakyReLU(x)
                     x = self.pool(x)
                     x = self.dropout(x)  
                     x = torch.flatten(x, start_dim=1)
@@ -141,7 +141,7 @@ if pose_type == "pose":
             
                 x = torch.cat(outputs, dim=1)
                 x = self.fc2(x)
-                x = torch.relu(x)
+                x = nn.LeakyReLU(x)
                 x = self.dropout(x) 
                 x = self.fc3(x)
                         
@@ -152,15 +152,15 @@ if pose_type == "pose":
         class PoseEncoder(nn.Module):
             def __init__(self, input_dim=(30,156), embedding_dim=512):
                 super(PoseEncoder, self).__init__()
-                self.conv1_1 = nn.Conv1d(in_channels=3, out_channels=9, kernel_size=3, padding=1)
-                self.conv1_2 = nn.Conv1d(in_channels=63, out_channels=63*3, kernel_size=3, padding=1)
-                self.conv1_3 = nn.Conv1d(in_channels=45, out_channels=45*3, kernel_size=3, padding=1)
-                self.conv2_1 = nn.Conv1d(in_channels=9, out_channels=30, kernel_size=3, padding=1)
-                self.conv2_2 = nn.Conv1d(in_channels=63*3, out_channels=630, kernel_size=3, padding=1)
-                self.conv2_3 = nn.Conv1d(in_channels=45*3, out_channels=450, kernel_size=3, padding=1)
-                self.conv3_1 = nn.Conv1d(in_channels=30, out_channels=90, kernel_size=3, padding=1)
-                self.conv3_2 = nn.Conv1d(in_channels=630, out_channels=90, kernel_size=3, padding=1)
-                self.conv3_3 = nn.Conv1d(in_channels=450, out_channels=90, kernel_size=3, padding=1)
+                self.conv1_1 = nn.Conv1d(in_channels=3, out_channels=9, kernel_size=3, padding='same')
+                self.conv1_2 = nn.Conv1d(in_channels=63, out_channels=63*3, kernel_size=3, padding='same')
+                self.conv1_3 = nn.Conv1d(in_channels=45, out_channels=45*3, kernel_size=3, padding='same')
+                self.conv2_1 = nn.Conv1d(in_channels=9, out_channels=30, kernel_size=3, padding='same')
+                self.conv2_2 = nn.Conv1d(in_channels=63*3, out_channels=630, kernel_size=3, padding='same')
+                self.conv2_3 = nn.Conv1d(in_channels=45*3, out_channels=450, kernel_size=3, padding='same')
+                self.conv3_1 = nn.Conv1d(in_channels=30, out_channels=90, kernel_size=3, padding='same')
+                self.conv3_2 = nn.Conv1d(in_channels=630, out_channels=90, kernel_size=3, padding='same')
+                self.conv3_3 = nn.Conv1d(in_channels=450, out_channels=90, kernel_size=3, padding='same')
                 self.pool = nn.MaxPool1d(kernel_size=3)
                 self.fc1_1 = nn.Linear(90 , embedding_dim) 
                 self.fc1_2 = nn.Linear(1890 , embedding_dim) 
@@ -179,19 +179,19 @@ if pose_type == "pose":
                     residual = slice.clone()
                     if slice.shape[1] == 3:
                         out = self.conv1_1(slice)
-                        out = torch.relu(out)
+                        out = nn.LeakyReLU(out)
                         out = self.pool(out)
                         out = self.dropout(out)  
                         out = out + residual.view(out.shape[0], out.shape[1], -1)
                         residual = out
                         out = self.conv2_1(out)
-                        out = torch.relu(out)
+                        out = nn.LeakyReLU(out)
                         out = self.pool(out)
                         out = self.dropout(out)  
                         out = out + residual.view(out.shape[0], out.shape[1], -1)
                         residual = out
                         out = self.conv3_1(out)
-                        out = torch.relu(out)
+                        out = nn.LeakyReLU(out)
                         out = self.pool(out)
                         out = self.dropout(out)  
                         out = out + residual.view(out.shape[0], out.shape[1], -1)
@@ -201,19 +201,19 @@ if pose_type == "pose":
 
                     elif slice.shape[1] == 63:
                         out = self.conv1_2(slice)
-                        out = torch.relu(out)
+                        out = nn.LeakyReLU(out)
                         out = self.pool(out)
                         out = self.dropout(out)  
                         out = out + residual.view(out.shape[0], out.shape[1], -1)
                         residual = out
                         out = self.conv2_2(out)
-                        out = torch.relu(out)
+                        out = nn.LeakyReLU(out)
                         out = self.pool(out)
                         out = self.dropout(out)  
                         out = out + residual.view(out.shape[0], out.shape[1], -1)
                         residual = out
                         out = self.conv3_2(out)
-                        out = torch.relu(out)
+                        out = nn.LeakyReLU(out)
                         out = self.pool(out)
                         out = self.dropout(out)  
                         out = out + residual.view(out.shape[0], out.shape[1], -1)
@@ -223,19 +223,19 @@ if pose_type == "pose":
 
                     else:
                         out = self.conv1_3(slice)
-                        out = torch.relu(out)
+                        out = nn.LeakyReLU(out)
                         out = self.pool(out)
                         out = self.dropout(out)  
                         out = out + residual.view(out.shape[0], out.shape[1], -1)
                         residual = out
                         out = self.conv2_3(out)
-                        out = torch.relu(out)
+                        out = nn.LeakyReLU(out)
                         out = self.pool(out)
                         out = self.dropout(out)  
                         out = out + residual.view(out.shape[0], out.shape[1], -1)
                         residual = out
                         out = self.conv3_3(out)
-                        out = torch.relu(out)
+                        out = nn.LeakyReLU(out)
                         out = self.pool(out)
                         out = self.dropout(out)  
                         out = out + residual.view(out.shape[0], out.shape[1], -1)
@@ -245,7 +245,7 @@ if pose_type == "pose":
 
                 x = torch.cat(outputs, dim=1)
                 x = self.fc2(x)
-                x = torch.relu(x)
+                x = nn.LeakyReLU(x)
                 x = self.dropout(x) 
                 x = self.fc3(x)
                         
@@ -258,7 +258,7 @@ if pose_type == "pose":
                 super(PoseEncoder, self).__init__()
                 self.encoder = nn.Sequential(
                     nn.Linear(input_dim, embedding_dim*2),
-                    nn.ReLU(),
+                    nn.LeakyReLU(),
                     nn.Dropout(p=0.3),
                     nn.Linear(embedding_dim*2, embedding_dim),
                     nn.Dropout(p=0.3)

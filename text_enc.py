@@ -19,20 +19,20 @@ if text_encoder_type == "cnn":
 
     def forward(self, x):
         x = self.conv1(x.unsqueeze(2))
-        x = torch.relu(x)
+        x = nn.LeakyReLU(x)
         x = self.pool(x)
         x = self.dropout(x)  
         x = self.conv2(x)
-        x = torch.relu(x)
+        x = nn.LeakyReLU(x)
         x = self.pool(x)
         x = self.dropout(x)  
         x = self.conv3(x)
-        x = torch.relu(x)
+        x = nn.LeakyReLU(x)
         x = self.pool(x)
         x = self.dropout(x)  
         x = torch.flatten(x, start_dim=1)
         x = self.fc1(x)
-        x = torch.relu(x)
+        x = nn.LeakyReLU(x)
         x = self.dropout(x) 
         x = self.fc2(x)
         
@@ -54,25 +54,25 @@ elif text_encoder_type == "res":
         def forward(self, x):
             residual = x
             x = self.conv1(x.unsqueeze(2))
-            x = torch.relu(x)
+            x = nn.LeakyReLU(x)
             x = self.pool(x)
             x = self.dropout(x)  
             x = x + residual.view(x.shape[0], x.shape[1], -1)
             residual = x
             x = self.conv2(x)
-            x = torch.relu(x)
+            x = nn.LeakyReLU(x)
             x = self.pool(x)
             x = self.dropout(x)  
             x = x + residual.view(x.shape[0], x.shape[1], -1)
             residual = x
             x = self.conv3(x)
-            x = torch.relu(x)
+            x = nn.LeakyReLU(x)
             x = self.pool(x)
             x = self.dropout(x)  
             x = x + residual.view(x.shape[0], x.shape[1], -1)
             x = torch.flatten(x, start_dim=1)
             x = self.fc1(x)
-            x = torch.relu(x)
+            x = nn.LeakyReLU(x)
             x = self.dropout(x) 
             x = self.fc2(x)
             
@@ -106,7 +106,7 @@ else:
             super(TextEncoder, self).__init__()
             self.encoder = nn.Sequential(
                 nn.Linear(input_dim, embedding_dim*2),
-                nn.ReLU(),
+                nn.LeakyReLU(),
                 nn.Dropout(p=0.3),  
                 nn.Linear(embedding_dim*2, embedding_dim),
                 nn.Dropout(p=0.3)  

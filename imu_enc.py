@@ -10,9 +10,9 @@ if imu_encoder_type == "cnn":
     class ImuEncoder(nn.Module):
         def __init__(self, input_dim=(3, 60), embedding_dim=512):
             super(ImuEncoder, self).__init__()
-            self.conv1 = nn.Conv1d(in_channels=input_dim[0], out_channels=32, kernel_size=3, padding=1)
-            self.conv2 = nn.Conv1d(in_channels=32, out_channels=128, kernel_size=3, padding=1)
-            self.conv3 = nn.Conv1d(in_channels=128, out_channels=256, kernel_size=3, padding=1)
+            self.conv1 = nn.Conv1d(in_channels=input_dim[0], out_channels=32, kernel_size=3, padding='same')
+            self.conv2 = nn.Conv1d(in_channels=32, out_channels=128, kernel_size=3, padding='same')
+            self.conv3 = nn.Conv1d(in_channels=128, out_channels=256, kernel_size=3, padding='same')
             self.pool = nn.MaxPool1d(kernel_size=3)
             self.fc1 = nn.Linear(256 * (input_dim[1] // 27), embedding_dim)
             self.fc2 = nn.Linear(embedding_dim*4, embedding_dim*2)
@@ -27,15 +27,15 @@ if imu_encoder_type == "cnn":
         
             for slice in slices:
                 out = self.conv1(slice)
-                out = torch.relu(out)
+                out = nn.LeakyReLU(out)
                 out = self.pool(out)
                 out = self.dropout(out)  
                 out = self.conv2(out)
-                out = torch.relu(out)
+                out = nn.LeakyReLU(out)
                 out = self.pool(out)
                 out = self.dropout(out)  
                 out = self.conv3(out)
-                out = torch.relu(out)
+                out = nn.LeakyReLU(out)
                 out = self.pool(out)
                 out = self.dropout(out)  
                 out = torch.flatten(out, start_dim=1)
@@ -43,7 +43,7 @@ if imu_encoder_type == "cnn":
                 outputs.append(out)
             x = torch.cat(outputs, dim=1)
             x = self.fc2(x)
-            x = torch.relu(x)
+            x = nn.LeakyReLU(x)
             x = self.dropout(x) 
             x = self.fc3(x)
                             
@@ -54,9 +54,9 @@ elif imu_encoder_type == "res":
     class ImuEncoder(nn.Module):
         def __init__(self, input_dim=(3, 60), embedding_dim=512):
             super(ImuEncoder, self).__init__()
-            self.conv1 = nn.Conv1d(in_channels=input_dim[0], out_channels=9, kernel_size=3, padding=1)
-            self.conv2 = nn.Conv1d(in_channels=9, out_channels=30, kernel_size=3, padding=1)
-            self.conv3 = nn.Conv1d(in_channels=30, out_channels=90, kernel_size=3, padding=1)
+            self.conv1 = nn.Conv1d(in_channels=input_dim[0], out_channels=9, kernel_size=3, padding='same')
+            self.conv2 = nn.Conv1d(in_channels=9, out_channels=30, kernel_size=3, padding='same')
+            self.conv3 = nn.Conv1d(in_channels=30, out_channels=90, kernel_size=3, padding='same')
             self.pool = nn.MaxPool1d(kernel_size=3)
             self.fc1 = nn.Linear(input_dim[0]*input_dim[1], embedding_dim)
             self.fc2 = nn.Linear(embedding_dim*4, embedding_dim*2)
@@ -71,19 +71,19 @@ elif imu_encoder_type == "res":
             for slice in slices:
                 residual = slice
                 out = self.conv1(slice)
-                out = torch.relu(out)
+                out = nn.LeakyReLU(out)
                 out = self.pool(out)
                 out = self.dropout(out)
                 out = out + residual.view(out.shape[0], out.shape[1], -1)
                 residual = out
                 out = self.conv2(out)
-                out = torch.relu(out)
+                out = nn.LeakyReLU(out)
                 out = self.pool(out)
                 out = self.dropout(out)  
                 out = out + residual.view(out.shape[0], out.shape[1], -1)
                 residual = out
                 out = self.conv3(out)
-                out = torch.relu(out)
+                out = nn.LeakyReLU(out)
                 out = self.pool(out)
                 out = self.dropout(out)  
                 out = out + residual.view(out.shape[0], out.shape[1], -1)
@@ -93,7 +93,7 @@ elif imu_encoder_type == "res":
 
             x = torch.cat(outputs, dim=1)
             x = self.fc2(x)
-            x = torch.relu(x)
+            x = nn.LeakyReLU(x)
             x = self.dropout(x) 
             x = self.fc3(x)
                             
@@ -120,15 +120,11 @@ elif imu_encoder_type == "i_spatiotemporal":
             attn_output, _ = self.self_attention(x, x, x)
             attn_output = attn_output.permute(1, 0, 2) 
             attn_output = self.layer_norm(attn_output)
-            print(attn_output.shape)
             attn_output = attn_output.view(attn_output.shape[0], -1)
-            print(attn_output.shape)
             attn_output = self.fc1(attn_output)
-            print(attn_output.shape)
-            x = torch.relu(x)
+            x = nn.LeakyReLU(x)
             attn_output = self.fc2(attn_output)
             attn_output= attn_output.reshape(attn_output.shape[0], -1, self.embedding_dim)
-            print(attn_output.shape)
             context = torch.mean(attn_output, dim=1)
             return context
 
@@ -207,9 +203,9 @@ elif imu_encoder_type == "hybrid_st":
         def forward(self, x):
             x = x.view(-1, x.size(2), x.size(1))
             x = self.conv1(x)
-            x = F.relu(x)
+            x = nn.LeakyReLU(x)
             x = self.conv2(x)
-            x = F.relu(x)
+            x = nn.LeakyReLU(x)
             x = x.reshape(x.shape[0], 12, -1)
             x = self.upsample(x)
             x = self.pos_encoding(x)
@@ -258,7 +254,7 @@ elif imu_encoder_type == "lstm":
                     nn.Sequential(
                         nn.Conv2d(in_ch_, 64, kernel_size=(5, 1), padding=(2, 0)),
                         nn.BatchNorm2d(64),
-                        nn.ReLU(),
+                        nn.LeakyReLU(),
                     )
                 )
             self.conv_blocks = nn.ModuleList(blocks)
@@ -298,7 +294,7 @@ else:
             super(ImuEncoder, self).__init__()
             self.encoder = nn.Sequential(
                 nn.Linear(input_dim, embedding_dim*2),
-                nn.ReLU(),
+                nn.LeakyReLU(),
                 nn.Dropout(p=0.3),  
                 nn.Linear(embedding_dim*2, embedding_dim),
                 nn.Dropout(p=0.3) 
