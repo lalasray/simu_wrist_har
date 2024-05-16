@@ -13,7 +13,6 @@ if imu_encoder_type == "cnn":
             self.conv1 = nn.Conv1d(in_channels=input_dim[0], out_channels=32, kernel_size=3, padding='same')
             self.conv2 = nn.Conv1d(in_channels=32, out_channels=128, kernel_size=3, padding='same')
             self.conv3 = nn.Conv1d(in_channels=128, out_channels=256, kernel_size=3, padding='same')
-            self.pool = nn.MaxPool1d(kernel_size=3)
             self.fc1 = nn.Linear(256 * (input_dim[1] // 27), embedding_dim)
             self.fc2 = nn.Linear(embedding_dim*4, embedding_dim*2)
             self.fc3 = nn.Linear(embedding_dim*2, embedding_dim)
@@ -28,15 +27,12 @@ if imu_encoder_type == "cnn":
             for slice in slices:
                 out = self.conv1(slice)
                 out = nn.LeakyReLU(out)
-                out = self.pool(out)
                 out = self.dropout(out)  
                 out = self.conv2(out)
                 out = nn.LeakyReLU(out)
-                out = self.pool(out)
                 out = self.dropout(out)  
                 out = self.conv3(out)
                 out = nn.LeakyReLU(out)
-                out = self.pool(out)
                 out = self.dropout(out)  
                 out = torch.flatten(out, start_dim=1)
                 out = self.fc1(out)
@@ -57,7 +53,6 @@ elif imu_encoder_type == "res":
             self.conv1 = nn.Conv1d(in_channels=input_dim[0], out_channels=9, kernel_size=3, padding='same')
             self.conv2 = nn.Conv1d(in_channels=9, out_channels=30, kernel_size=3, padding='same')
             self.conv3 = nn.Conv1d(in_channels=30, out_channels=90, kernel_size=3, padding='same')
-            self.pool = nn.MaxPool1d(kernel_size=3)
             self.fc1 = nn.Linear(input_dim[0]*input_dim[1], embedding_dim)
             self.fc2 = nn.Linear(embedding_dim*4, embedding_dim*2)
             self.fc3 = nn.Linear(embedding_dim*2, embedding_dim)
@@ -72,19 +67,16 @@ elif imu_encoder_type == "res":
                 residual = slice
                 out = self.conv1(slice)
                 out = nn.LeakyReLU(out)
-                out = self.pool(out)
                 out = self.dropout(out)
                 out = out + residual.view(out.shape[0], out.shape[1], -1)
                 residual = out
                 out = self.conv2(out)
                 out = nn.LeakyReLU(out)
-                out = self.pool(out)
                 out = self.dropout(out)  
                 out = out + residual.view(out.shape[0], out.shape[1], -1)
                 residual = out
                 out = self.conv3(out)
                 out = nn.LeakyReLU(out)
-                out = self.pool(out)
                 out = self.dropout(out)  
                 out = out + residual.view(out.shape[0], out.shape[1], -1)
                 out = torch.flatten(out, start_dim=1) 
@@ -197,28 +189,31 @@ elif imu_encoder_type == "hybrid_st":
             self.pos_encoding = PositionalEncoding(embedding_dim, input_dim[1])
             self.self_attention = nn.MultiheadAttention(embedding_dim, num_heads, dropout=0.1)
             self.layer_norm = nn.LayerNorm(embedding_dim)
-            self.conv1 = nn.Conv1d(input_dim[0], 64, kernel_size=3, padding='same')
-            self.conv2 = nn.Conv1d(64, 120, kernel_size=3, padding='same')
-                    
+            self.conv1 = nn.Conv1d(input_dim[0], 16, kernel_size=3, padding='same')
+            self.conv2 = nn.Conv1d(16, 32, kernel_size=3, padding='same')
+            self.fc1 = nn.Linear(embedding_dim, embedding_dim // 2)
+            self.fc2 = nn.Linear(embedding_dim // 2, embedding_dim)
+
         def forward(self, x):
-            x = x.view(-1, x.size(2), x.size(1))
+            x = x.view(-1, x.size(2), x.size(1)) 
             x = self.conv1(x)
-            x = nn.LeakyReLU(x)
+            x = F.leaky_relu(x)
             x = self.conv2(x)
-            x = nn.LeakyReLU(x)
-            x = x.reshape(x.shape[0], 12, -1)
+            x = F.leaky_relu(x)
+            print(x.shape)
+            x = x.reshape(x.shape[0], 12, -1) 
+            print(x.shape)
             x = self.upsample(x)
             x = self.pos_encoding(x)
-            x = x.permute(1, 0, 2)
+            x = x.permute(1, 0, 2)  
             attn_output, _ = self.self_attention(x, x, x)
-            attn_output = attn_output.permute(1, 0, 2) 
+            attn_output = attn_output.permute(1, 0, 2)
             attn_output = self.layer_norm(attn_output)
-            #linear
-            #realu
-            #linear
             context = torch.mean(attn_output, dim=1)
-            #'add attention'
-
+            context = self.fc1(context)
+            context = F.leaky_relu(context)
+            context = self.fc2(context)
+            
             return context
 
     class PositionalEncoding(nn.Module):
@@ -226,7 +221,7 @@ elif imu_encoder_type == "hybrid_st":
             super(PositionalEncoding, self).__init__()
             self.dropout = nn.Dropout(p=0.3)
             self.embedding_dim = d_model
-                    
+
             position = torch.arange(0, max_len).unsqueeze(1)
             div_term = torch.exp(torch.arange(0, d_model, 2) * (-torch.log(torch.tensor(10000.0)) / d_model))
             pe = torch.zeros(max_len, d_model)
@@ -235,7 +230,7 @@ elif imu_encoder_type == "hybrid_st":
             self.register_buffer('pe', pe)
 
         def forward(self, x):
-            x = x + self.pe[:x.size(1), :].unsqueeze(0) 
+            x = x + self.pe[:x.size(1), :].unsqueeze(0)
             x = self.dropout(x)
             return x
 
