@@ -3,7 +3,7 @@ from loss import InfonceLoss,ContrastiveLoss
 imu_encoder_type = "i_spatiotemporal" #fc #cnn #res #lstm #spatiotemporal #hybrid_st #i_spatiotemporal
 text_encoder_type = "res" #fc #cnn #res #spatial
 pose_type = "pose" #embedding 
-pose_encoder_type = "spatiotemporal"  #fc #cnn #res #spatiotemporal
+pose_encoder_type = "spatiotemporal"  #fc #cnn #res #spatiotemporal #i_spatiotemporal
 
 batch_size = 32
 embedding_dim = 256
