@@ -300,9 +300,9 @@ else:
             return self.encoder(x.view(batch_size, -1))
             
 if __name__ == '__main__':
-    batch_size = 16
+    batch_size = config.batch_size
     input_tensor = torch.randn(batch_size, 60, 12)
-    model = ImuEncoder(embedding_dim = 512)
+    model = ImuEncoder(embedding_dim = config.embedding_dim)
     print("input shape:", input_tensor.shape)
     output = model(input_tensor)
     print("Output shape:", output.shape)

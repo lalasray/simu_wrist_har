@@ -1,16 +1,16 @@
 from loss import InfonceLoss,ContrastiveLoss
 
-imu_encoder_type = "hybrid_st" #fc #cnn #res #lstm #spatiotemporal #hybrid_st #i_spatiotemporal
+imu_encoder_type = "fc" #fc #cnn #res #lstm #spatiotemporal #hybrid_st #i_spatiotemporal
 text_encoder_type = "fc" #fc #cnn #res #spatial
 pose_type = "pose" #embedding 
-pose_encoder_type = "spatiotemporal"  #fc #cnn #res #spatiotemporal #i_spatiotemporal
+pose_encoder_type = "fc"  #fc #cnn #res #spatiotemporal #i_spatiotemporal
 
 batch_size = 32
 embedding_dim = 256
 num_epochs = 300
 patience = 30
 
-classifer_type = 'multihead' #multihead #fc #attention
+classifer_type = 'fc' #multihead #fc #i_multihead
 
 classes = 11 #openpack11
 num_epochs_class = 300

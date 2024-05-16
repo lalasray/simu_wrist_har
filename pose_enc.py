@@ -17,8 +17,8 @@ if pose_type == "pose":
                 self.pos_encoding = PositionalEncoding(embedding_dim, input_dim[1])
                 self.self_attention = nn.MultiheadAttention(embedding_dim, num_heads, dropout=0.1)
                 self.layer_norm = nn.LayerNorm(embedding_dim)
-                self.fc1 = nn.Linear(embedding_dim*12, embedding_dim*6)
-                self.fc2 = nn.Linear(embedding_dim*6, embedding_dim*3)
+                self.fc1 = nn.Linear(embedding_dim*30, embedding_dim*10)
+                self.fc2 = nn.Linear(embedding_dim*10, embedding_dim*5)
                         
             def forward(self, x):
                 x = self.upsample(x)
@@ -268,9 +268,10 @@ elif pose_type == "embedding":
 
         print("ToDo")
 
-#batch_size = 16
-#input_tensor = torch.randn(batch_size, 30, 156)
-#model = PoseEncoder(embedding_dim = 512)
-#print("input shape:", input_tensor.shape)
-#output = model(input_tensor)
-#print("Output shape:", output.shape)
+if __name__ == '__main__':
+    batch_size = config.batch_size
+    input_tensor = torch.randn(batch_size, 30, 156)
+    model = PoseEncoder(embedding_dim = config.embedding_dim)
+    print("input shape:", input_tensor.shape)
+    output = model(input_tensor)
+    print("Output shape:", output.shape)

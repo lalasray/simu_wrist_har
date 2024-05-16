@@ -1,86 +1,20 @@
 import numpy as np
 
-# Confusion matrix
-'''
-# no pretrain
-confusion_matrix = np.array([
-    [ 681 ,  43  , 56 ,  19  ,  9  ,  6  , 58 ,  11 ,  42 ,  18  ,  3],
- [  78 , 936 , 102 ,  31 ,  52 ,  38 ,  45 ,  72 ,   4 ,  39  ,  1],
- [  80 ,  66 , 658 , 112 , 214 ,  13  , 41 ,  74  , 41  ,  8  ,  0],
- [  72 ,  27 , 130 , 533 ,  37  ,  8  ,  8  , 11  , 25  ,  2  ,  0],
- [  13 ,  44 , 292  , 71 , 306  ,  7  , 15  ,  6  ,  7  ,  3  ,  0],
- [  16 ,  55 ,  64  ,  7 ,  40  , 86  , 56  , 28  , 11  , 16  ,  1],
- [  26 , 100  , 33  ,  6 ,  15  , 13 ,1274  , 18  , 10  , 13  ,  5],
- [  50 ,  40 ,  78  , 56 ,  14  , 15 ,  26  ,360  , 10  ,  3  ,  0],
- [ 137 ,  17 ,  22  ,  6 ,   2  ,  3 ,   3  , 14  ,351  , 14  ,  0],
- [  21 ,  67 ,  32  ,  5 ,  14  ,  7 ,  11  , 18  ,  3  ,572  ,  0],
- [   6 ,   9 ,  22  ,  9 ,   4  ,  2 ,  19  ,  4  ,  3  ,  0  ,  2]
-])
+# String representation of the confusion matrix
+confusion_matrix_str = "[[65  5 17 15  2  2 48  4 14 22  0] [ 8 70 37  9 11  1 35 11  5 12  0] [14 21 87 22  9  3 14 23  6  3  0] [22  7 59 57 11  4 22  6  1  3  0] [ 8 26 73 19 19  2  9  8  2  2  0] [ 3  4 12  3  1 10 13  7  3  2  0] [16 10 19 17  4  2 72  6  6  6  0] [ 8  7 26  5  8  6 19 44  1  2  0] [25  2  7  5  1  0  5  4 29  0  3] [ 1 16 18  2  6  1 26  1  0 39  0] [ 0  0  2  1  0  1  1  1  0  1  1]]"
+# Parse the string into a numpy array
+confusion_matrix = np.array(eval(confusion_matrix_str))
 
-confusion_matrix = np.array([
+# Calculate true positives, false positives, and false negatives for class 0
+TP = confusion_matrix[0, 0]
+FP = np.sum(confusion_matrix[1:, 0])
+FN = np.sum(confusion_matrix[0, 1:])
 
- [ 936 , 102 ,  31 ,  52 ,  38 ,  45 ,  72 ,   4 ,  39  ,  1],
- [  66 , 658 , 112 , 214 ,  13  , 41 ,  74  , 41  ,  8  ,  0],
- [  27 , 130 , 533 ,  37  ,  8  ,  8  , 11  , 25  ,  2  ,  0],
- [  44 , 292  , 71 , 306  ,  7  , 15  ,  6  ,  7  ,  3  ,  0],
- [  55 ,  64  ,  7 ,  40  , 86  , 56  , 28  , 11  , 16  ,  1],
- [  100  , 33  ,  6 ,  15  , 13 ,1274  , 18  , 10  , 13  ,  5],
- [  40 ,  78  , 56 ,  14  , 15 ,  26  ,360  , 10  ,  3  ,  0],
- [ 17 ,  22  ,  6 ,   2  ,  3 ,   3  , 14  ,351  , 14  ,  0],
- [  67 ,  32  ,  5 ,  14  ,  7 ,  11  , 18  ,  3  ,572  ,  0],
- [   9 ,  22  ,  9 ,   4  ,  2 ,  19  ,  4  ,  3  ,  0  ,  2]
-])
+# Calculate precision, recall, and F1 score
+precision = TP / (TP + FP)
+recall = TP / (TP + FN)
+f1_score = 2 * (precision * recall) / (precision + recall)
 
-# pretrain
-confusion_matrix = np.array([
-[ 668  , 34   ,55 ,  27  ,  6  ,  8  , 49  , 15  , 54  , 27   , 3],
- [ 113 , 952  ,126 ,  26 ,  28 ,  17  , 57 ,  31  ,  7 ,  41  ,  0],
- [  72 ,  53  ,788 ,  85 , 165  ,  7  , 34 ,  79  , 21 ,   3  ,  0],
- [  67 ,  25  ,128 , 541 ,  42  ,  3  , 14 ,  15  , 14 ,   4  ,  0],
- [   6 ,  29  ,281 ,  80 , 342  ,  4  ,  9 ,   7  ,  5 ,   1  ,  0],
- [  19 ,  40  , 60 ,  15  , 24 , 109  , 58 ,  26  ,  9 ,  19  ,  1],
- [  26 ,  77  , 13 ,   5  ,  6  , 15 ,1336 ,  19  ,  6 ,   7  ,  3],
- [  89 ,  35  , 81 ,  29  , 17  , 15 ,  36 , 332  ,  9 ,   9  ,  0],
- [  63  ,  4  , 11 ,   9  ,  1  ,  0  , 12  ,  9  ,430 ,  30  ,  0],
- [  38  , 47 ,  35 ,   9  , 13  ,  2  , 13  , 15  ,  5 , 573  ,  0],
- [   1  ,  5 ,  26 ,  11  ,  5  ,  1 ,  10  ,  4  ,  9 ,   1  ,  7]
- ])
-
-'''
-
-confusion_matrix = np.array([
- [ 952  ,126 ,  26 ,  28 ,  17  , 57 ,  31  ,  7 ,  41  ,  0],
- [  53  ,788 ,  85 , 165  ,  7  , 34 ,  79  , 21 ,   3  ,  0],
- [  25  ,128 , 541 ,  42  ,  3  , 14 ,  15  , 14 ,   4  ,  0],
- [  29  ,281 ,  80 , 342  ,  4  ,  9 ,   7  ,  5 ,   1  ,  0],
- [  40  , 60 ,  15  , 24 , 109  , 58 ,  26  ,  9 ,  19  ,  1],
- [  77  , 13 ,   5  ,  6  , 15 ,1336 ,  19  ,  6 ,   7  ,  3],
- [  35  , 81 ,  29  , 17  , 15 ,  36 , 332  ,  9 ,   9  ,  0],
- [  4  , 11 ,   9  ,  1  ,  0  , 12  ,  9  ,430 ,  30  ,  0],
- [  47 ,  35 ,   9  , 13  ,  2  , 13  , 15  ,  5 , 573  ,  0],
- [  5 ,  26 ,  11  ,  5  ,  1 ,  10  ,  4  ,  9 ,   1  ,  7]
- ])
-
-# Calculate precision, recall, and F1 score for each class
-precisions = []
-recalls = []
-f1_scores = []
-
-for i in range(len(confusion_matrix)):
-    tp = confusion_matrix[i, i]
-    fp = np.sum(confusion_matrix[:, i]) - tp
-    fn = np.sum(confusion_matrix[i, :]) - tp
-
-    precision = tp / (tp + fp)
-    recall = tp / (tp + fn)
-    f1 = 2 * (precision * recall) / (precision + recall)
-
-    precisions.append(precision)
-    recalls.append(recall)
-    f1_scores.append(f1)
-
-# Compute weighted average of F1 scores based on support
-supports = np.sum(confusion_matrix, axis=1)
-weighted_f1 = np.average(f1_scores, weights=supports)
-
-print("Weighted F1 Score:", weighted_f1)
+print("Precision:", precision)
+print("Recall:", recall)
+print("F1 Score:", f1_score)

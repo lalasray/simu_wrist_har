@@ -23,7 +23,7 @@ for it in range(1):
     encoder = TriModalModel(TextEncoder(embedding_dim=embedding_dim).to(device),
                             ImuEncoder(embedding_dim=embedding_dim).to(device),
                             PoseEncoder(embedding_dim=embedding_dim).to(device)).to(device)
-    encoder.load_state_dict(torch.load('best_model.pth'))
+    #encoder.load_state_dict(torch.load('best_model.pth'))
     imu_encoder = encoder.imu_encoder
 
     classifier_decoder = ClassifierDecoder(input_size=embedding_dim, num_classes=config.classes).to(device)
@@ -43,8 +43,8 @@ for it in range(1):
     fine_tuned_model = FineTunedModel(imu_encoder, classifier_decoder).to(device)
     print(fine_tuned_model)
     parent = config.parent
-    train_path = parent + 'data/openpack_uni/tensors' 
-    val_path = parent + 'data/openpack_uni/val'
+    train_path = parent + 'data/openpack/train' 
+    val_path = parent + 'data/openpack/test'
     train_dataset = TriDataset(get_data_files(train_path))
     val_dataset = TriDataset(get_data_files(val_path))
 
@@ -101,7 +101,7 @@ for it in range(1):
                 early_stopping_criteria = max(early_stopping_criteria, improvement)
                 previous_best_f1_score = val_f1_score
                 early_stopping_counter = 0
-                torch.save(fine_tuned_model.state_dict(), str(it)+'_pre_'+config.imu_encoder_type+'_'+config.classifer_type+'classifier_decoder_.pth')
+                torch.save(fine_tuned_model.state_dict(), str(it)+'_no_'+config.imu_encoder_type+'_'+config.classifer_type+'classifier_decoder_.pth')
             else:
                 early_stopping_counter += 1
                 if early_stopping_counter >= patience:
