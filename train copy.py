@@ -65,9 +65,6 @@ for epoch in range(num_epochs):
         total_loss += loss.item()
 
     total_loss /= len(train_loader)
-    t_i_loss_total /= len(train_loader)
-    t_p_loss_total /= len(train_loader)
-    i_p_loss_total /= len(train_loader)
         
     model.eval()  
     val_loss = 0.0
@@ -77,13 +74,13 @@ for epoch in range(num_epochs):
             loss = criterion(text_output, imu_output) + criterion(text_output, pose_output) + criterion(imu_output, pose_output)
             val_loss += loss.item()
     val_loss /= len(val_loader)
-    print(f"Epoch {epoch+1}, Validation Loss: {val_loss}, Train Loss: {total_loss} TexPose Loss: {t_p_loss}, TextImu Loss: {t_i_loss}, ImuPose Loss: {i_p_loss}")
+    print(f"Epoch {epoch+1}, Validation Loss: {val_loss}, Train Loss: {total_loss}")
     scheduler.step(val_loss)
     
     if val_loss < best_val_loss:
         best_val_loss = val_loss
         counter = 0
-        torch.save(model.state_dict(), 'best_model.pth')
+        torch.save(model.state_dict(), 'best_model_fc.pth')
     else:
         counter += 1
         if counter >= patience:
