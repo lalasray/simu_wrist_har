@@ -26,10 +26,10 @@ class QuadModalModel(nn.Module):
         self.pose_encoder = pose_encoder
         self.imu_encoderR = imu_encoderR 
 
-    def forward(self, text_input, imu_input, pose_input):
+    def forward(self, text_input, imu_inputL, imu_inputR, pose_input):
         text_output = self.text_encoder(text_input)
-        imu_outputL = self.imu_encoderL(imu_input[:,:,0:6])
+        imu_outputL = self.imu_encoderL(imu_inputL)
         pose_output = self.pose_encoder(pose_input)
-        imu_outputR = self.imu_encoderR(imu_input[:,:,7:12]) 
+        imu_outputR = self.imu_encoderR(imu_inputR) 
 
         return text_output, imu_outputL,imu_outputR, pose_output 

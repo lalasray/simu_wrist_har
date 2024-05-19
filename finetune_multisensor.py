@@ -20,12 +20,12 @@ for it in range(1):
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     embedding_dim = config.embedding_dim
-    encoder = TextEncoder(TextEncoder(embedding_dim=embedding_dim).to(device),
+    encoder = QuadModalModel(TextEncoder(embedding_dim=embedding_dim).to(device),
                             ImuEncoder(embedding_dim=embedding_dim).to(device),
                             ImuEncoder(embedding_dim=embedding_dim).to(device),
                             PoseEncoder(embedding_dim=embedding_dim).to(device)).to(device)
     #encoder.load_state_dict(torch.load('best_model_fc.pth'))
-    imu_encoder = encoder.imu_encoder
+    imu_encoder = encoder.imu_encoderL
 
     classifier_decoder = ClassifierDecoder(input_size=embedding_dim, num_classes=config.classes).to(device)
 
@@ -69,7 +69,7 @@ for it in range(1):
         total_train_loss = 0.0
         
         for imu, label_data in train_loader:
-            imu = imu.to(device)
+            imu = imu[:, :, 0:6].to(device)
             label_data = label_data.to(device)
             
             optimizer.zero_grad()

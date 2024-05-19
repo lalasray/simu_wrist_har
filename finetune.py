@@ -44,7 +44,7 @@ for it in range(1):
     print(fine_tuned_model)
     parent = config.parent
     #train_path = parent + 'data/openpack/train' 
-    train_path = parent + 'data/tensors'
+    train_path = parent + 'data/openpack/train'
     val_path = parent + 'data/openpack/u9'
     train_dataset = TriDataset(get_data_files(train_path))
     val_dataset = TriDataset(get_data_files(val_path))

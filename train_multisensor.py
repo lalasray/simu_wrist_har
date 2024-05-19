@@ -5,8 +5,8 @@ from torch.utils.data import DataLoader
 from text_enc import TextEncoder
 from imu_enc import ImuEncoder
 from pose_enc import PoseEncoder
-from model import TriModalModel, QuadModalModel
-from dataloader import TriDataset, get_data_files
+from model import QuadModalModel
+from dataloader import QaudDataset, get_data_files
 from torch.utils.data import ConcatDataset
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 import config
@@ -21,9 +21,9 @@ val_path = os.path.join(parent, 'data/how2sign/val/tensors')
 test_path = os.path.join(parent, 'data/how2sign/test/tensors')
 train_path = os.path.join(parent, 'data/how2sign/train/tensors')
 
-dataset_val = TriDataset(get_data_files(val_path))
-dataset_train = TriDataset(get_data_files(train_path))
-dataset_test = TriDataset(get_data_files(test_path))
+dataset_val = QaudDataset(get_data_files(val_path))
+dataset_train = QaudDataset(get_data_files(train_path))
+dataset_test = QaudDataset(get_data_files(test_path))
 combined_dataset = ConcatDataset([dataset_train, dataset_test])
 
 train_loader = DataLoader(combined_dataset, batch_size=batch_size, shuffle=True)
@@ -48,9 +48,9 @@ hyperparameters = {"embedding_dim": embedding_dim, "batch_size": batch_size}
 for epoch in range(num_epochs):
     total_loss = 0.0
     model.train() 
-    for pose, imu, text in train_loader:
+    for pose, imuL, imuR, text in train_loader:
         optimizer.zero_grad()
-        text_output, imu_outputL, imu_outputR, pose_output = model(text, imu, pose)
+        text_output, imu_outputL, imu_outputR, pose_output = model(text, imuL, imuR, pose)
         
         t_iL_loss = criterion(text_output, imu_outputL)
         t_iR_loss = criterion(text_output, imu_outputR)
