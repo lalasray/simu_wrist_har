@@ -5,7 +5,7 @@ from torch.utils.data import DataLoader
 from text_enc import TextEncoder
 from imu_enc import ImuEncoder
 from pose_enc import PoseEncoder
-from model import TriModalModel
+from model import TriModalModel, QuadModalModel
 from dataloader import TriDataset, get_data_files
 from torch.utils.data import ConcatDataset
 from torch.optim.lr_scheduler import ReduceLROnPlateau
@@ -30,10 +30,11 @@ train_loader = DataLoader(combined_dataset, batch_size=batch_size, shuffle=True)
 val_loader = DataLoader(dataset_val, batch_size=batch_size, shuffle=True)
 
 text_encoder = TextEncoder(embedding_dim=embedding_dim).to(device)
-imu_encoder = ImuEncoder(embedding_dim=embedding_dim).to(device)
+imu_encoderL = ImuEncoder(embedding_dim=embedding_dim).to(device)
+imu_encoderR = ImuEncoder(embedding_dim=embedding_dim).to(device)
 pose_encoder = PoseEncoder(embedding_dim=embedding_dim).to(device)
 
-model = TriModalModel(text_encoder, imu_encoder, pose_encoder).to(device)
+model = QuadModalModel(text_encoder, imu_encoderL, imu_encoderR, pose_encoder).to(device)
 criterion = config.loss
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 patience = config.patience
@@ -46,20 +47,21 @@ hyperparameters = {"embedding_dim": embedding_dim, "batch_size": batch_size}
 
 for epoch in range(num_epochs):
     total_loss = 0.0
-    t_i_loss_total = 0
-    t_p_loss_total = 0
-    i_p_loss_total = 0
     model.train() 
     for pose, imu, text in train_loader:
         optimizer.zero_grad()
-        text_output, imu_output, pose_output = model(text, imu, pose)
+        text_output, imu_outputL, imu_outputR, pose_output = model(text, imu, pose)
         
-        t_i_loss = criterion(text_output, imu_output)
+        t_iL_loss = criterion(text_output, imu_outputL)
+        t_iR_loss = criterion(text_output, imu_outputR)
         t_p_loss = criterion(text_output, pose_output)
-        i_p_loss = criterion(imu_output, pose_output)
+        iL_p_loss = criterion(imu_outputL, pose_output)
+        iR_p_loss = criterion(imu_outputR, pose_output)
+        iR_p_loss = criterion(imu_outputR, pose_output)
+        iR_iL_loss = criterion(imu_outputR, imu_outputL)
 
-        loss = t_i_loss + t_p_loss + i_p_loss
-
+        loss = t_iL_loss + t_iR_loss + t_p_loss+iL_p_loss+iR_p_loss+iR_p_loss+iR_iL_loss
+        
         loss.backward()
         optimizer.step()
         total_loss += loss.item()

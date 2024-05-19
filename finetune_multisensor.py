@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
-from model import TriModalModel
+from model import TriModalModel,QuadModalModel
 from text_enc import TextEncoder
 from imu_enc import ImuEncoder
 from pose_enc import PoseEncoder
@@ -20,7 +20,8 @@ for it in range(1):
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     embedding_dim = config.embedding_dim
-    encoder = TriModalModel(TextEncoder(embedding_dim=embedding_dim).to(device),
+    encoder = TextEncoder(TextEncoder(embedding_dim=embedding_dim).to(device),
+                            ImuEncoder(embedding_dim=embedding_dim).to(device),
                             ImuEncoder(embedding_dim=embedding_dim).to(device),
                             PoseEncoder(embedding_dim=embedding_dim).to(device)).to(device)
     #encoder.load_state_dict(torch.load('best_model_fc.pth'))
@@ -44,7 +45,7 @@ for it in range(1):
     print(fine_tuned_model)
     parent = config.parent
     #train_path = parent + 'data/openpack/train' 
-    train_path = parent + 'data/tensors'
+    train_path = parent + 'data/openpack_uni/tensors'
     val_path = parent + 'data/openpack/u9'
     train_dataset = TriDataset(get_data_files(train_path))
     val_dataset = TriDataset(get_data_files(val_path))
