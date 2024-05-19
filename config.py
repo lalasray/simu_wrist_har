@@ -16,7 +16,7 @@ classes = 11 #openpack11
 num_epochs_class = 300
 batch_size_class = 32
 
-parent = "c:/Users/lalas/Documents/GitHub/simu_wrist_har/"
-#parent = "/home/lala/other/Repos/git/simu_wrist_har/"
+#parent = "c:/Users/lalas/Documents/GitHub/simu_wrist_har/"
+parent = "/home/lala/other/Repos/git/simu_wrist_har/"
 
 loss = InfonceLoss() #ContrastiveLoss() #InfonceLoss()

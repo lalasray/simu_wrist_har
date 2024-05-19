@@ -22,7 +22,7 @@ test_path = os.path.join(parent, 'data/how2sign/test/tensors')
 train_path = os.path.join(parent, 'data/how2sign/train/tensors')
 
 dataset_val = TriDataset(get_data_files(val_path))
-dataset_train = TriDataset(get_data_files(val_path))
+dataset_train = TriDataset(get_data_files(train_path))
 dataset_test = TriDataset(get_data_files(test_path))
 combined_dataset = ConcatDataset([dataset_train, dataset_test])
 
@@ -82,7 +82,7 @@ for epoch in range(num_epochs):
     if val_loss < best_val_loss:
         best_val_loss = val_loss
         counter = 0
-        torch.save(model.state_dict(), 'best_model_fc.pth')
+        torch.save(model.state_dict(), 'best_model_mc.pth')
     else:
         counter += 1
         if counter >= patience:
