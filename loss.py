@@ -33,7 +33,7 @@ class InfonceLoss(nn.Module):
         denominator = exp_logits.sum(dim=-1).unsqueeze(1) + torch.sum(torch.exp(negatives), dim=-1)
         loss = -torch.log(numerator / denominator)
 
-        return loss.mean()
+        return loss.mean()   
 
 class ContrastiveLoss(nn.Module):
     def __init__(self, temperature=0.07):
