@@ -5,11 +5,13 @@ from torch.utils.data import DataLoader
 from text_enc import TextEncoder
 from imu_enc import ImuEncoder
 from pose_enc import PoseEncoder
-from model import QuadModalModel
+from model import QuadModalDecModel
 from dataloader import QaudDataset, get_data_files
 from torch.utils.data import ConcatDataset
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 import config
+from imu_dec import IMUDecoder
+import torch.nn.functional as F
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 batch_size = config.batch_size
@@ -33,9 +35,12 @@ text_encoder = TextEncoder(embedding_dim=embedding_dim).to(device)
 imu_encoderL = ImuEncoder(embedding_dim=embedding_dim).to(device)
 imu_encoderR = ImuEncoder(embedding_dim=embedding_dim).to(device)
 pose_encoder = PoseEncoder(embedding_dim=embedding_dim).to(device)
+imu_decoder_i = IMUDecoder(embedding_dim=embedding_dim).to(device)
+imu_decoder_p = IMUDecoder(embedding_dim=embedding_dim).to(device)
 
-model = QuadModalModel(text_encoder, imu_encoderL, imu_encoderR, pose_encoder).to(device)
+model = QuadModalDecModel(text_encoder, imu_encoderL, imu_encoderR, pose_encoder, imu_decoder_i, imu_decoder_p).to(device)
 criterion = config.loss
+mse_loss = torch.nn.MSELoss()
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 patience = config.patience
 best_val_loss = float('inf')
@@ -44,14 +49,17 @@ scheduler = ReduceLROnPlateau(optimizer, mode='min', patience=(config.patience)/
 
 local_log_dir = "local_logs"
 hyperparameters = {"embedding_dim": embedding_dim, "batch_size": batch_size}
+total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+print("Total learnable parameters:", total_params)
 
 for epoch in range(num_epochs):
     total_loss = 0.0
     model.train() 
     for pose, imuL, imuR, text in train_loader:
         optimizer.zero_grad()
-        text_output, imu_outputL, imu_outputR, pose_output = model(text, imuL, imuR, pose)
-        
+        text_output, imu_outputL, imu_outputR, pose_output, imu_decoder_i, imu_decoder_p  = model(text, imuL, imuR, pose)
+        imu_gt = torch.cat((imuL, imuR), dim=2)
+        imu_gt = F.normalize(imu_gt[:, 30, :], p=2, dim=-1)
         t_iL_loss = criterion(text_output, imu_outputL)
         t_iR_loss = criterion(text_output, imu_outputR)
         t_p_loss = criterion(text_output, pose_output)
@@ -59,6 +67,8 @@ for epoch in range(num_epochs):
         iR_p_loss = criterion(imu_outputR, pose_output)
         iR_p_loss = criterion(imu_outputR, pose_output)
         iR_iL_loss = criterion(imu_outputR, imu_outputL)
+        imu_loss_i = mse_loss(imu_gt, F.normalize(imu_decoder_i, p=2, dim=-1)).mean()
+        imu_loss_p = mse_loss(imu_gt, F.normalize(imu_decoder_p, p=2, dim=-1)).mean()
 
         loss = t_iL_loss + t_iR_loss + t_p_loss+iL_p_loss+iR_p_loss+iR_p_loss+iR_iL_loss
         
@@ -71,9 +81,19 @@ for epoch in range(num_epochs):
     model.eval()  
     val_loss = 0.0
     with torch.no_grad():
-        for pose, imu, text in val_loader:
-            text_output, imu_output, pose_output = model(text, imu, pose)
-            loss = criterion(text_output, imu_output) + criterion(text_output, pose_output) + criterion(imu_output, pose_output)
+        for pose, imuL, imuR, text in val_loader:
+            text_output, imu_outputL, imu_outputR, pose_output, imu_decoder_i, imu_decoder_p  = model(text, imuL, imuR, pose)
+            t_iL_loss = criterion(text_output, imu_outputL)
+            t_iR_loss = criterion(text_output, imu_outputR)
+            t_p_loss = criterion(text_output, pose_output)
+            iL_p_loss = criterion(imu_outputL, pose_output)
+            iR_p_loss = criterion(imu_outputR, pose_output)
+            iR_p_loss = criterion(imu_outputR, pose_output)
+            iR_iL_loss = criterion(imu_outputR, imu_outputL)
+            imu_loss_i = mse_loss(imu_gt, F.normalize(imu_decoder_i, p=2, dim=-1)).mean()
+            imu_loss_p = mse_loss(imu_gt, F.normalize(imu_decoder_p, p=2, dim=-1)).mean()
+
+            loss = t_iL_loss + t_iR_loss + t_p_loss+iL_p_loss+iR_p_loss+iR_p_loss+iR_iL_loss
             val_loss += loss.item()
     val_loss /= len(val_loader)
     print(f"Epoch {epoch+1}, Validation Loss: {val_loss}, Train Loss: {total_loss}")

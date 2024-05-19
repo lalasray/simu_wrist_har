@@ -44,6 +44,10 @@ scheduler = ReduceLROnPlateau(optimizer, mode='min', patience=(config.patience)/
 
 local_log_dir = "local_logs"
 hyperparameters = {"embedding_dim": embedding_dim, "batch_size": batch_size}
+print(model)
+total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+print("Total learnable parameters:", total_params)
+
 
 for epoch in range(num_epochs):
     total_loss = 0.0
@@ -51,7 +55,6 @@ for epoch in range(num_epochs):
     for pose, imuL, imuR, text in train_loader:
         optimizer.zero_grad()
         text_output, imu_outputL, imu_outputR, pose_output = model(text, imuL, imuR, pose)
-        
         t_iL_loss = criterion(text_output, imu_outputL)
         t_iR_loss = criterion(text_output, imu_outputR)
         t_p_loss = criterion(text_output, pose_output)
@@ -71,9 +74,17 @@ for epoch in range(num_epochs):
     model.eval()  
     val_loss = 0.0
     with torch.no_grad():
-        for pose, imu, text in val_loader:
-            text_output, imu_output, pose_output = model(text, imu, pose)
-            loss = criterion(text_output, imu_output) + criterion(text_output, pose_output) + criterion(imu_output, pose_output)
+        for pose, imuL, imuR, text in val_loader:
+            text_output, imu_outputL, imu_outputR, pose_output = model(text, imuL, imuR, pose)
+            t_iL_loss = criterion(text_output, imu_outputL)
+            t_iR_loss = criterion(text_output, imu_outputR)
+            t_p_loss = criterion(text_output, pose_output)
+            iL_p_loss = criterion(imu_outputL, pose_output)
+            iR_p_loss = criterion(imu_outputR, pose_output)
+            iR_p_loss = criterion(imu_outputR, pose_output)
+            iR_iL_loss = criterion(imu_outputR, imu_outputL)
+
+            loss = t_iL_loss + t_iR_loss + t_p_loss+iL_p_loss+iR_p_loss+iR_p_loss+iR_iL_loss
             val_loss += loss.item()
     val_loss /= len(val_loader)
     print(f"Epoch {epoch+1}, Validation Loss: {val_loss}, Train Loss: {total_loss}")
