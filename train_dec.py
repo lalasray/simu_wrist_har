@@ -64,9 +64,6 @@ for epoch in range(num_epochs):
         i_p_loss = criterion(imu_output, pose_output)
         imu_loss_i = mse_loss(imu_gt, F.normalize(imu_decoder_i, p=2, dim=-1)).mean()
         imu_loss_p = mse_loss(imu_gt, F.normalize(imu_decoder_p, p=2, dim=-1)).mean()
-
-
-
         loss = t_i_loss + t_p_loss + i_p_loss + imu_loss_i + imu_loss_p
 
         loss.backward()
@@ -80,7 +77,7 @@ for epoch in range(num_epochs):
     with torch.no_grad():
         for pose, imu, text in val_loader:
             text_output, imu_output, pose_output, imu_decoder_i, imu_decoder_p = model(text, imu, pose)
-            imu_gt = imu[:, 30, :]
+            imu_gt = F.normalize(imu[:, 30, :], p=2, dim=-1)
             loss = criterion(text_output, imu_output) + criterion(text_output, pose_output) + criterion(imu_output, pose_output) + mse_loss(imu_gt, F.normalize(imu_decoder_i, p=2, dim=-1)).mean() + mse_loss(imu_gt, F.normalize(imu_decoder_p, p=2, dim=-1)).mean()
             val_loss += loss.item()
     val_loss /= len(val_loader)
