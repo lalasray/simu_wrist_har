@@ -94,7 +94,7 @@ elif imu_encoder_type == "res":
 elif imu_encoder_type == "i_spatiotemporal":
 
     class ImuEncoder(nn.Module):
-        def __init__(self, input_dim=(12, 60), embedding_dim=1024, num_heads=8):
+        def __init__(self, input_dim=(6, 60), embedding_dim=1024, num_heads=8):
             super(ImuEncoder, self).__init__()
             self.embedding_dim = embedding_dim
             self.upsample = nn.Linear(input_dim[1], embedding_dim)
@@ -301,7 +301,7 @@ else:
             
 if __name__ == '__main__':
     batch_size = config.batch_size
-    input_tensor = torch.randn(batch_size, 60, 12)
+    input_tensor = torch.randn(batch_size, 60, 6)
     model = ImuEncoder(embedding_dim = config.embedding_dim)
     print("input shape:", input_tensor.shape)
     output = model(input_tensor)
