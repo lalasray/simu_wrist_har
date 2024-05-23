@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, random_split
 from model import TriModalModel
 from text_enc import TextEncoder
 from imu_enc import ImuEncoder
@@ -47,9 +47,16 @@ for it in range(1):
     train_path = parent + 'data/openpack/train'
     val_path = parent + 'data/openpack/u9'
     train_dataset = TriDataset(get_data_files(train_path))
+    total_size = len(train_dataset)
+    new_train = int(total_size * 0.6)
+    train_size = total_size - new_train
+
+    # Split the dataset
+    train_dataset, new_train_dataset = random_split(train_dataset, [train_size, new_train])
+
     val_dataset = TriDataset(get_data_files(val_path))
 
-    train_loader = DataLoader(train_dataset, batch_size=config.batch_size_class, shuffle=True, drop_last=False, pin_memory=True, num_workers=10)
+    train_loader = DataLoader(new_train_dataset, batch_size=config.batch_size_class, shuffle=True, drop_last=False, pin_memory=True, num_workers=10)
     val_loader = DataLoader(val_dataset, batch_size=config.batch_size_class, shuffle=False, drop_last=False, pin_memory=True, num_workers=10)
 
     criterion = nn.CrossEntropyLoss().to(device)  
