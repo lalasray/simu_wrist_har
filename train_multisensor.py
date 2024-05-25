@@ -60,10 +60,9 @@ for epoch in range(num_epochs):
         t_p_loss = criterion(text_output, pose_output)
         iL_p_loss = criterion(imu_outputL, pose_output)
         iR_p_loss = criterion(imu_outputR, pose_output)
-        iR_p_loss = criterion(imu_outputR, pose_output)
         iR_iL_loss = criterion(imu_outputR, imu_outputL)
 
-        loss = t_iL_loss + t_iR_loss + t_p_loss+iL_p_loss+iR_p_loss+iR_p_loss+iR_iL_loss
+        loss = t_iL_loss + t_iR_loss + t_p_loss+iL_p_loss+iR_p_loss+iR_iL_loss
         
         loss.backward()
         optimizer.step()
