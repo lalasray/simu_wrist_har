@@ -70,7 +70,7 @@ for epoch in range(num_epochs):
         imu_loss_i = mse_loss(imu_gt, F.normalize(imu_decoder_i, p=2, dim=-1)).mean()
         imu_loss_p = mse_loss(imu_gt, F.normalize(imu_decoder_p, p=2, dim=-1)).mean()
 
-        loss = t_iL_loss + t_iR_loss + t_p_loss+iL_p_loss+iR_p_loss+iR_p_loss+iR_iL_loss
+        loss = t_iL_loss + t_iR_loss + t_p_loss+iL_p_loss+iR_p_loss+iR_iL_loss+imu_loss_i+imu_loss_p
         
         loss.backward()
         optimizer.step()
