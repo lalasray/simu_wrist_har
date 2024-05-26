@@ -116,6 +116,7 @@ elif imu_encoder_type == "f_spatiotemporal":
             attn_output = self.layer_norm(attn_output)  # (batch_size, sequence_length, embedding_dim)
             attn_output = attn_output.view(attn_output.shape[0], -1)  # (batch_size, sequence_length * embedding_dim)
             attn_output = self.fc1(attn_output)  # (batch_size, embedding_dim * 6)
+            print(attn_output.shape[1]/256)
             attn_output = self.activation(attn_output)  # Apply activation
             attn_output = self.fc2(attn_output)  # (batch_size, embedding_dim * 3)
             attn_output = attn_output.view(attn_output.shape[0], -1, self.embedding_dim)  # (batch_size, ?, embedding_dim)
