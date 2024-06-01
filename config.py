@@ -11,7 +11,7 @@ embedding_dim = 256
 num_epochs = 300
 patience = 30
 
-classifer_type = 'multihead' #multihead #fc #i_multihead
+classifer_type = 'fc' #multihead #fc #i_multihead
 
 classes = 11 #openpack11
 num_epochs_class = 300

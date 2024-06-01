@@ -44,8 +44,9 @@ for it in range(1):
     print(fine_tuned_model)
     parent = config.parent
     #train_path = parent + 'data/openpack/train' 
-    train_path = parent + 'data/openpack/train'
-    val_path = parent + 'data/openpack/u9'
+    #train_path = parent + 'data/openpack_uni/tensors'
+    train_path = parent + 'data/openpack/u9'
+    val_path = parent + 'data/openpack/u1'
     train_dataset = TriDataset(get_data_files(train_path))
     total_size = len(train_dataset)
     new_train = int(total_size * 0.6)

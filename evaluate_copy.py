@@ -18,11 +18,11 @@ model = TriModalModel(TextEncoder(embedding_dim=embedding_dim).to(device),
                       ImuEncoder(embedding_dim=embedding_dim).to(device),
                       PoseEncoder(embedding_dim=embedding_dim).to(device)).to(device)
                       
-model.load_state_dict(torch.load('best_model_fc.pth'))
-model.eval()
+#model.load_state_dict(torch.load('best_model_fc.pth'))
+#model.eval()
 
 parent = config.parent
-val_path = parent + 'data/openpack/u1/'
+val_path = parent + 'data/openpack/u9/'
 val_dataset = TriDataset(get_data_files(val_path))
 loader = DataLoader(val_dataset, batch_size=config.batch_size_class, shuffle=False, num_workers=10,  drop_last=False, pin_memory=True)
 
@@ -40,7 +40,7 @@ class FineTunedModel(nn.Module):
         return classification_logits
 
 fine_tuned_model = FineTunedModel(model.imu_encoder, classifier_decoder).to(device)
-fine_tuned_model.load_state_dict(torch.load('0_no_fc_fcclassifier_decoder_.pth'))
+fine_tuned_model.load_state_dict(torch.load('0_no_i_spatiotemporal_fcclassifier_decoder_.pth'))
 
 
 text_embeddings = []
