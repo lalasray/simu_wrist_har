@@ -4,7 +4,7 @@ imu_encoder_type = "i_spatiotemporal" #fc #cnn #res #lstm #spatiotemporal #hybri
 text_encoder_type = "fc" #fc #cnn #res #spatial
 pose_type = "pose" #embedding 
 pose_encoder_type = "i_spatiotemporal"  #fc #cnn #res #spatiotemporal #i_spatiotemporal
-imu_decoder_type = "cnn"
+imu_decoder_type = "attention" #cnn #attention
 
 batch_size = 32
 embedding_dim = 256

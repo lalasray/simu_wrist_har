@@ -49,11 +49,66 @@ if imu_decoder_type == "cnn":
             x = self.fc2(x)
             
             return x
+        
+elif imu_decoder_type == "attention":
+
+    class MultiHeadAttention(nn.Module):
+        def __init__(self, embed_dim, num_heads):
+            super(MultiHeadAttention, self).__init__()
+            self.multihead_attn = nn.MultiheadAttention(embed_dim, num_heads)
+
+        def forward(self, x):
+            # x shape: (batch_size, 3, embed_dim)
+            # MultiheadAttention expects shape: (3, batch_size, embed_dim)
+            x = x.permute(1, 0, 2)  # (3, batch_size, embed_dim)
+            attn_output, _ = self.multihead_attn(x, x, x)
+            attn_output = attn_output.permute(1, 0, 2)  # (batch_size, 3, embed_dim)
+            return attn_output
+
+    class IMUDecoder(nn.Module):
+        def __init__(self, input_dim=256, num_heads=4, num_classes=10):
+            super(IMUDecoder, self).__init__()
+            # Convolutional layers
+            self.conv1 = nn.Conv1d(in_channels=256, out_channels=64, kernel_size=3, padding=1)
+            self.conv2 = nn.Conv1d(in_channels=64, out_channels=128, kernel_size=3, padding=1)
+            
+            # Multi-head attention
+            self.multihead_attn = MultiHeadAttention(embed_dim=128, num_heads=num_heads)
+            
+            # Layer normalization
+            self.layer_norm = nn.LayerNorm(128)
+            
+            # Fully connected layers
+            self.fc1 = nn.Linear(3 * 128, 256)
+            self.fc2 = nn.Linear(256, 128)
+            self.fc3 = nn.Linear(128, num_classes)
+
+        def forward(self, x):
+            # Convolutional layers
+            x = x.permute(0, 2, 1)  # (batch_size, 256, 3)
+            x = F.relu(self.conv1(x))  # (batch_size, 64, 3)
+            x = F.relu(self.conv2(x))  # (batch_size, 128, 3)
+            x = x.permute(0, 2, 1)  # (batch_size, 3, 128)
+            
+            # Multi-head attention
+            x = self.multihead_attn(x)
+            
+            # Layer normalization
+            x = self.layer_norm(x)
+            
+            # Flatten the input
+            x = x.view(x.size(0), -1)  # (batch_size, 3 * 128)
+            
+            # Fully connected layers
+            x = F.relu(self.fc1(x))
+            x = F.relu(self.fc2(x))
+            x = self.fc3(x)
+            
+            return x
             
 if __name__ == '__main__':
-    batch_size = config.batch_size
-    embedding_dim = config.embedding_dim
-    model = IMUDecoder(embedding_dim=embedding_dim)
-    input_tensor = torch.randn(batch_size, embedding_dim)
-    output_tensor = model(input_tensor)
-    print(f"Output shape: {output_tensor.shape}")
+    batch_size = 32
+    embedding = torch.randn(batch_size, 3, 256)
+    decoder = IMUDecoder(input_dim=256, num_heads=4, num_classes=10)
+    output = decoder(embedding)
+    print(output.shape)  # Should be (batch_size, 10)
