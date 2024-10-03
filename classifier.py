@@ -64,11 +64,11 @@ elif decoder == "i_multihead":
 elif decoder == "c_multihead":
 
     class ClassifierDecoder(nn.Module):
-        def __init__(self, input_size=(6, 256), num_classes=11, num_heads=8, cnn_out_channels=64, kernel_size=3, padding=1):
+        def __init__(self, input_size=(6, 256), num_classes=11, num_heads=8, cnn_out_channels=64, kernel_size=3):
             super(ClassifierDecoder, self).__init__()
             
 
-            self.cnn = nn.Conv1d(in_channels=input_size[0], out_channels=cnn_out_channels, kernel_size=kernel_size, padding=padding)
+            self.cnn = nn.Conv1d(in_channels=input_size[0], out_channels=cnn_out_channels, kernel_size=kernel_size)
             self.relu = nn.ReLU()
             self.norm1 = nn.LayerNorm([cnn_out_channels, input_size[1]]) 
             linear_size = cnn_out_channels * input_size[1]
