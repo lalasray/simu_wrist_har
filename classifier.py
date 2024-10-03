@@ -74,10 +74,10 @@ elif decoder == "c_multihead":
             linear_size = cnn_out_channels * input_size[1]
             self.multihead_attention1 = nn.MultiheadAttention(embed_dim=linear_size, num_heads=num_heads)
             self.norm2 = nn.LayerNorm(linear_size)
-            self.linear1 = nn.Linear(linear_size, linear_size)
-            self.multihead_attention2 = nn.MultiheadAttention(embed_dim=linear_size, num_heads=num_heads)
-            self.norm3 = nn.LayerNorm(linear_size)
-            self.linear2 = nn.Linear(linear_size, linear_size)
+            self.linear1 = nn.Linear(linear_size, linear_size*2)
+            self.multihead_attention2 = nn.MultiheadAttention(embed_dim=linear_size*2, num_heads=num_heads)
+            self.norm3 = nn.LayerNorm(linear_size*2)
+            self.linear2 = nn.Linear(linear_size*2, linear_size)
             self.fc = nn.Linear(linear_size, num_classes)
             
         def forward(self, x):
