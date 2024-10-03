@@ -59,6 +59,45 @@ elif decoder == "i_multihead":
             attended_features2 = attended_features2.view(attended_features2.shape[0], 11, -1)
             output = attended_features2.mean(dim=2)
             return output
+        
+
+elif decoder == "c_multihead":
+
+    class ClassifierDecoder(nn.Module):
+        def __init__(self, input_size=(6, 256), num_classes=11, num_heads=8, cnn_out_channels=64, kernel_size=3, padding=1):
+            super(ClassifierDecoder, self).__init__()
+            
+
+            self.cnn = nn.Conv1d(in_channels=input_size[0], out_channels=cnn_out_channels, kernel_size=kernel_size, padding=padding)
+            self.relu = nn.ReLU()
+            self.norm1 = nn.LayerNorm([cnn_out_channels, input_size[1]]) 
+            linear_size = cnn_out_channels * input_size[1]
+            self.multihead_attention1 = nn.MultiheadAttention(embed_dim=linear_size, num_heads=num_heads)
+            self.norm2 = nn.LayerNorm(linear_size)
+            self.linear1 = nn.Linear(linear_size, linear_size)
+            self.multihead_attention2 = nn.MultiheadAttention(embed_dim=linear_size, num_heads=num_heads)
+            self.norm3 = nn.LayerNorm(linear_size)
+            self.linear2 = nn.Linear(linear_size, linear_size)
+            self.fc = nn.Linear(linear_size, num_classes)
+            
+        def forward(self, x):
+            x = self.cnn(x)
+            x = self.relu(x)
+            x = self.norm1(x)
+            batch_size, cnn_channels, feature_dim = x.shape
+            x = x.view(batch_size, cnn_channels * feature_dim)
+            attended_features1, _ = self.multihead_attention1(x.unsqueeze(1), x.unsqueeze(1), x.unsqueeze(1))
+            attended_features1 = self.norm2(attended_features1.squeeze(1))
+            attended_features1 = self.relu(attended_features1)
+            attended_features1 = self.linear1(attended_features1)
+            attended_features2, _ = self.multihead_attention2(attended_features1.unsqueeze(1), attended_features1.unsqueeze(1), attended_features1.unsqueeze(1))
+            attended_features2 = self.norm3(attended_features2.squeeze(1))
+            attended_features2 = self.relu(attended_features2)
+            attended_features2 = self.linear2(attended_features2)
+            output = attended_features2.view(batch_size, cnn_channels, feature_dim).mean(dim=2)
+            output = self.fc(output)
+            return output
+
 
         
 else: 
