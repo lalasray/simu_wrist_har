@@ -76,5 +76,8 @@ class QuadModalDecModel(nn.Module):
         imu_output = self.linear_layer(imu_output)
         imu_output_i = self.imu_decoder_i(imu_output)
         imu_output_p = self.imu_decoder_p(pose_output)
+        #text_output = F.normalize(text_output, p=2, dim=1)
+        #imu_output = F.normalize(imu_output, p=2, dim=1)
+        #pose_output = F.normalize(pose_output, p=2, dim=1)
 
         return text_output, imu_outputL,imu_outputR, pose_output, imu_output_i, imu_output_p
