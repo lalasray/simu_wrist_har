@@ -5,3 +5,5 @@
 
     To finetune multimodal(-/-multitask) run 'finetune.py'
     To finetune multimodal-multisensor(-/-multitask) run 'finetune_multisensor.py'
+
+    Change architecures in config.py
